@@ -1,10 +1,8 @@
 <template>
-  <section id="section-sb-keyword-targeting" class="card card--flush">
-    <div class="kt-card-header">
-      <h2>Keyword Targeting</h2>
-    </div>
+  <section id="section-sb-keyword-targeting" class="card">
+    <h2>Keyword Targeting</h2>
 
-    <div class="kt-shell">
+    <div class="kt-shell kt-shell--bleed">
       <div class="kt-tabs-row">
         <UnderlineTabs v-model="form.keywordTargetTab" :items="tabs" size="lg" />
       </div>
@@ -58,7 +56,7 @@
               <input
                 ref="enterFileInput"
                 type="file"
-                accept=".txt,.csv,.tsv,.xlsx,.xls"
+                accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 class="enter-file-input-hidden"
                 @change="onEnterListFile"
               />
@@ -82,7 +80,27 @@
               <tr>
                 <th class="kw-stack-th">
                   <span class="kw-stack-th__primary">Keyword</span>
-                  <span class="kw-stack-th__secondary">IS | IR</span>
+                  <span class="kw-stack-th__secondary">
+                    IS | IR
+                    <span class="kw-isir-wrap">
+                      <button
+                        type="button"
+                        class="kw-stack-th__info"
+                        aria-label="About impression share (IS) and impression rate (IR)"
+                      >
+                        <img :src="iconHelpCircle" width="14" height="14" alt="" />
+                      </button>
+                      <span class="kw-isir-tooltip">
+                        <strong>Impression share (IS)</strong> is the percentage of impressions
+                        you're getting on this term relative to all the impressions it is
+                        generating.<br /><br />
+                        <strong>Impression rank (IR)</strong> is where your IS stands relative
+                        to other advertisers' share of impressions for the same term.<br /><br />
+                        Use these to understand your impression coverage and help you decide
+                        how much to bid.
+                      </span>
+                    </span>
+                  </span>
                 </th>
                 <th>Match type</th>
                 <th>Suggested bid</th>
@@ -146,6 +164,13 @@
             <label class="chk"><UiCheckbox v-model="form.keywordTargetingMatchTypes.broad" /> Broad</label>
           </div>
           <div v-if="!form.keywordSelectedCampaignId || !form.keywordSelectedAdGroupId" class="empty-block">
+            <div class="empty-illus" aria-hidden="true">
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <rect x="8" y="14" width="48" height="36" rx="4" stroke="var(--gray-300,#d0d7e2)" stroke-width="1.5" fill="var(--gray-50,#f8fafc)"/>
+                <path d="M20 32h24M20 40h16" stroke="var(--gray-300,#d0d7e2)" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="32" cy="24" r="4" stroke="var(--gray-300,#d0d7e2)" stroke-width="1.5"/>
+              </svg>
+            </div>
             <p class="empty-text">请先选择 Campaign 和 Ad Group</p>
             <p class="empty-hint">选择后将展示该广告组下的历史关键词</p>
           </div>
@@ -202,6 +227,13 @@
 
       <div class="kt-right-stack">
         <div v-if="form.keywords.length === 0" class="empty-block tight">
+          <div class="empty-illus" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+              <rect x="6" y="10" width="44" height="32" rx="4" stroke="var(--gray-300,#d0d7e2)" stroke-width="1.5" fill="var(--gray-50,#f8fafc)"/>
+              <path d="M14 26h28M14 33h18" stroke="var(--gray-300,#d0d7e2)" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M36 38l6 6M42 38l-6 6" stroke="var(--primary,#1876ff)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+          </div>
           <p class="empty-text">尚未添加关键词</p>
           <p class="empty-hint">从左侧添加关键词</p>
         </div>
@@ -209,7 +241,30 @@
           <table class="data-table added-table">
             <thead>
               <tr>
-                <th class="kw-stack-th"><span class="kw-stack-th__primary">Keyword</span></th>
+                <th class="kw-stack-th">
+                  <span class="kw-stack-th__primary">Keyword</span>
+                  <span class="kw-stack-th__secondary">
+                    IS | IR
+                    <span class="kw-isir-wrap">
+                      <button
+                        type="button"
+                        class="kw-stack-th__info"
+                        aria-label="About impression share (IS) and impression rate (IR)"
+                      >
+                        <img :src="iconHelpCircle" width="14" height="14" alt="" />
+                      </button>
+                      <span class="kw-isir-tooltip">
+                        <strong>Impression share (IS)</strong> is the percentage of impressions
+                        you're getting on this term relative to all the impressions it is
+                        generating.<br /><br />
+                        <strong>Impression rank (IR)</strong> is where your IS stands relative
+                        to other advertisers' share of impressions for the same term.<br /><br />
+                        Use these to understand your impression coverage and help you decide
+                        how much to bid.
+                      </span>
+                    </span>
+                  </span>
+                </th>
                 <th>Match type</th>
                 <th>Suggested bid</th>
                 <th>Bid</th>
@@ -256,12 +311,14 @@ import UiSelect from '@/components/ui/select/Select.vue'
 import UiCheckbox from '@/components/ui/checkbox/Checkbox.vue'
 import UnderlineTabs from '@/components/ui/UnderlineTabs.vue'
 import InlineNumberInput from '@/components/base/InlineNumberInput.vue'
+import iconHelpCircle from '@/assets/icon-help-circle.svg'
 
 const { form } = storeToRefs(useSbStore())
 
 const tabs = [
   { id: 'enter', label: 'Enter list' },
   { id: 'campaigns', label: 'Select from campaigns' },
+  { id: 'amazon', label: 'Amazon Suggested' },
 ]
 
 const enterListText = ref('')
@@ -457,17 +514,13 @@ async function onEnterListFile(ev) {
   background: var(--bg-card);
   border-radius: var(--radius-card);
   padding: 28px 32px;
-}
-
-.card--flush {
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   overflow: hidden;
 }
 
-.kt-card-header {
-  padding: 24px 32px 0;
-}
-
+/* 与 StoreSpotlightContent / Collections 等卡片标题完全一致（padding 在 .card 上，不在 h2 上） */
 h2 {
   margin: 0 0 16px;
   font-size: var(--text-2xl, 22px);
@@ -482,6 +535,16 @@ h2 {
   min-height: 520px;
 }
 
+/* 工作台左右通栏，与 Negative「Exclude products」ep-work 同构 */
+.kt-shell--bleed {
+  --kt-pad-x: 32px;
+  width: calc(100% + 2 * var(--kt-pad-x));
+  max-width: none;
+  margin-left: calc(-1 * var(--kt-pad-x));
+  margin-right: calc(-1 * var(--kt-pad-x));
+  box-sizing: border-box;
+}
+
 .kt-tabs-row {
   grid-column: 1;
   grid-row: 1;
@@ -489,7 +552,7 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 24px 20px 0;
+  padding: 16px 20px 0;
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
   box-sizing: border-box;
@@ -689,6 +752,75 @@ h2 {
 
 .kw-stack-th__primary { display: block; font-size: 14px; font-weight: 600; color: var(--text-main); line-height: 1.35; }
 
+.kw-stack-th__secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: var(--text-xs, 12px);
+  font-weight: 400;
+  color: var(--text-sub);
+  line-height: 1.3;
+}
+
+.kw-stack-th__info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: help;
+  line-height: 0;
+  opacity: 0.75;
+}
+
+.kw-stack-th__info:hover {
+  opacity: 1;
+}
+
+.kw-isir-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.kw-isir-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -8px;
+  transform: none;
+  width: 280px;
+  background: #1c1f23;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.65;
+  padding: 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  pointer-events: none;
+  z-index: 200;
+  white-space: normal;
+  text-align: left;
+}
+
+.kw-isir-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 14px;
+  transform: none;
+  border: 5px solid transparent;
+  border-bottom-color: #1c1f23;
+}
+
+.kw-isir-wrap:hover .kw-isir-tooltip {
+  display: block;
+}
+
 .kw-stack-td--rowspan { vertical-align: top; }
 
 .kw-stack-td__title { font-size: var(--text-md, 15px); }
@@ -723,6 +855,8 @@ h2 {
   justify-content: center; padding: 40px 24px; min-height: 280px;
 }
 .empty-block.tight { min-height: 200px; padding: 20px; }
+
+.empty-illus { opacity: 0.6; flex-shrink: 0; }
 
 .empty-text { margin: 10px 0 4px; font-size: 14px; font-weight: 600; color: var(--text-main); }
 

@@ -3,7 +3,7 @@
               <!-- ═══════════════ Products Module ═══════════════ -->
               <section class="pt-module">
                 <div class="pt-module-head">
-                  <h3 class="pt-module-title">Products</h3>
+                  <h2 class="pt-module-title">{{ productTitle }}</h2>
                 </div>
     
                 <div class="pt-shell">
@@ -444,7 +444,7 @@
               <!-- ═══════════════ Categories Module ═══════════════ -->
               <section class="pt-module">
                 <div class="pt-module-head">
-                  <h3 class="pt-module-title">Categories</h3>
+                  <h2 class="pt-module-title">{{ categoryTitle }}</h2>
                 </div>
     
                 <div class="pt-shell">
@@ -597,9 +597,13 @@ import { Download } from 'lucide-vue-next'
 const props = defineProps({
   /** Ref from storeToRefs — parent campaign or sb form */
   form: { type: Object, required: true },
+  productTitle: { type: String, default: 'Products' },
+  categoryTitle: { type: String, default: 'Categories' },
 })
 
 const form = toRef(props, 'form')
+const productTitle = toRef(props, 'productTitle')
+const categoryTitle = toRef(props, 'categoryTitle')
 
 const deliveryTypeOptions = [
   { label: 'Exact',    value: 'Exact' },

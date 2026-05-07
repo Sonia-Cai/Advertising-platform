@@ -14,6 +14,9 @@
           <SbAdGroupNameSection ref="adGroupNameRef" />
           <SbAdFormatSection />
           <SbTargetingSection v-if="form.adFormat === 'collections'" />
+          <SbStoreSpotlightManualTargetingSection
+            v-if="form.adFormat === 'collections' && !form.targetingAuto"
+          />
           <SbLandingPageSection v-if="form.adFormat === 'store_spotlight' || form.adFormat === 'video'" />
         </main>
       </div>
@@ -24,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSbStore } from '@/stores/sb'
 import { storeToRefs } from 'pinia'
@@ -34,6 +37,7 @@ import SbAdGroupNameSection from './SbAdGroupNameSection.vue'
 import SbAdFormatSection from './SbAdFormatSection.vue'
 import SbTargetingSection from './SbTargetingSection.vue'
 import SbLandingPageSection from './SbLandingPageSection.vue'
+import SbStoreSpotlightManualTargetingSection from './SbStoreSpotlightManualTargetingSection.vue'
 import { useSbFlowSteps } from '@/composables/useSbFlowSteps'
 
 const router = useRouter()
@@ -63,6 +67,9 @@ const subItems = computed(() => {
   ]
   if (form.value.adFormat === 'collections') {
     base.push({ label: 'Collection type', anchorId: 'section-sb-collection-type' })
+    if (!form.value.targetingAuto) {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
   } else if (form.value.adFormat === 'store_spotlight' || form.value.adFormat === 'video') {
     base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
     if (form.value.adFormat === 'store_spotlight') {
@@ -75,7 +82,8 @@ const subItems = computed(() => {
 const activeSubItem = ref('Ad group name')
 
 let observer = null
-onMounted(() => {
+function setupObserver() {
+  observer?.disconnect()
   const sectionEls = subItems.value
     .map(s => ({ label: s.label, el: document.getElementById(s.anchorId) }))
     .filter(s => s.el)
@@ -92,7 +100,19 @@ onMounted(() => {
     { rootMargin: '-20% 0px -60% 0px', threshold: 0 }
   )
   sectionEls.forEach(s => observer.observe(s.el))
+}
+
+onMounted(() => {
+  setupObserver()
 })
+
+watch(
+  () => subItems.value.map((s) => s.anchorId).join('|'),
+  async () => {
+    await nextTick()
+    setupObserver()
+  }
+)
 
 onUnmounted(() => {
   if (observer) observer.disconnect()
@@ -159,4 +179,5 @@ function onNext() {
   flex-direction: column;
   gap: 16px;
 }
+
 </style>

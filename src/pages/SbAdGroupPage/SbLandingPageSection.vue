@@ -33,6 +33,7 @@
           <span class="landing-page-card__title landing-page-toggle__label">Landing page</span>
         </button>
       </h2>
+      <p v-if="!spotlightLandingOpen" class="landing-page-collapsed-note">Choose a Store：DREO</p>
       <Transition name="slide-landing">
         <div
           v-show="spotlightLandingOpen"
@@ -193,6 +194,13 @@ const storePageOptions = [
 
 .landing-page-toggle__label {
   margin: 0;
+}
+
+.landing-page-collapsed-note {
+  margin: 12px 0 0 28px;
+  font-size: var(--text-base, 14px);
+  color: var(--text-sub);
+  line-height: 1.5;
 }
 
 .landing-page-collapsible-panel {

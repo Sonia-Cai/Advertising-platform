@@ -167,22 +167,25 @@
 
     </div>
 
-    <template v-if="form.storeSpotlightManualTargetType === 'keyword'">
+    <template v-if="effectiveTargetType === 'keyword'">
       <p v-if="errors.keywords" class="error-msg ss-flow-error">{{ errors.keywords }}</p>
       <SbKeywordTargetingSection />
     </template>
 
     <div v-else id="section-sb-ss-products" class="sb-product-targeting-wrap">
       <p v-if="errors.productTargeting" class="error-msg ss-flow-error">{{ errors.productTargeting }}</p>
-      <h2 class="sb-pt-page-title">Product targeting</h2>
-      <ProductTargetingPanels :form="form" />
+      <ProductTargetingPanels
+        :form="form"
+        product-title="Product Targeting-Products"
+        category-title="Product Targeting-Categories"
+      />
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, nextTick } from 'vue'
+import { computed, ref, reactive, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
 import Draggable from 'vuedraggable'
@@ -192,7 +195,18 @@ import UiSelect from '@/components/ui/select/Select.vue'
 import SbKeywordTargetingSection from '../shared/SbKeywordTargetingSection.vue'
 import ProductTargetingPanels from '@/components/product-targeting/ProductTargetingPanels.vue'
 
+const props = defineProps({
+  targetingModeOverride: {
+    type: String,
+    default: ''
+  }
+})
+
 const { form } = storeToRefs(useSbStore())
+
+const effectiveTargetType = computed(() =>
+  props.targetingModeOverride || form.value.storeSpotlightManualTargetType
+)
 
 const optimizeHeadline = ref(false)
 const ssHeadline = ref('')
@@ -238,7 +252,7 @@ function validate() {
     errors.adName = ''
   }
 
-  if (form.value.storeSpotlightManualTargetType === 'keyword') {
+  if (effectiveTargetType.value === 'keyword') {
     errors.productTargeting = ''
     if (form.value.keywords.length === 0) {
       errors.keywords = 'Please add at least one keyword.'
@@ -282,11 +296,8 @@ defineExpose({ validate })
   gap: 16px;
 }
 
-.sb-pt-page-title {
-  margin: 0;
-  font-size: var(--text-3xl, 28px);
-  font-weight: 700;
-  color: var(--text-main);
+.sb-product-targeting-wrap :deep(.pt-panels-root) {
+  gap: 16px;
 }
 
 .store-spotlight-layout {

@@ -1,8 +1,8 @@
 <template>
   <div class="video-content">
-    <!-- Store on Amazon → same as Store Spotlight + Video upload -->
+    <!-- Store on Amazon → Store Spotlight + Video upload + Products -->
     <template v-if="form.videoLandingType === 'store'">
-      <StoreSpotlightContent ref="storeSpotlightRef" />
+      <StoreSpotlightContent ref="storeSpotlightRef" targeting-mode-override="keyword" />
 
       <section id="section-sb-video" class="card">
         <div class="title-group">
@@ -40,18 +40,61 @@
       </section>
     </template>
 
-    <!-- Product detail page → same as Collections > Manual (no Video module) -->
+    <!-- Store on Amazon → 单个产品 -->
+    <section
+      v-if="form.videoLandingType === 'store'"
+      id="section-sb-products"
+      class="card"
+    >
+      <div class="title-group">
+        <h2>Product <span class="required">*</span></h2>
+      </div>
+      <p class="card-desc">Add 1 product to feature in your ad.</p>
+      <ProductSelector
+        v-model="form.products"
+        picker-title="Select a product to feature in your ad"
+        :min="1"
+        :max="1"
+        :draggable="false"
+        label="Add"
+        :error="errors.products"
+        @update:model-value="errors.products = ''"
+      />
+      <p v-if="errors.products" class="error-msg">{{ errors.products }}</p>
+    </section>
+
+    <!-- Product detail page → Ad name + Keyword targeting + 1-3 个产品 -->
     <template v-else>
+      <section id="section-sb-video-ad-name" class="card">
+        <div class="title-group">
+          <h2>Ad name</h2>
+        </div>
+        <div class="field" :class="{ 'has-error': errors.adName }">
+          <div class="headline-wrap">
+            <UiInput
+              v-model="form.headline"
+              size="lg"
+              placeholder="Enter Ad name"
+              :maxlength="50"
+              @input="errors.adName = ''"
+            />
+          </div>
+          <p v-if="errors.adName" class="error-msg error-msg--field">{{ errors.adName }}</p>
+        </div>
+      </section>
+
+      <SbKeywordTargetingSection />
+
       <section id="section-sb-products" class="card">
         <div class="title-group">
           <h2>Products <span class="required">*</span></h2>
-          <p>Add 3-10 products to feature in your ad. Drag cards to change the display order.</p>
+          <p>Add 1-3 products to feature in your ad. Drag cards to change the display order.</p>
         </div>
         <ProductSelector
           v-model="form.products"
           picker-title="Select products to feature in your ad"
-          :min="3"
-          :max="10"
+          :min="1"
+          :max="3"
           :draggable="true"
           label="Add"
           :error="errors.products"
@@ -70,6 +113,8 @@ import { useSbStore } from '@/stores/sb'
 import { Trash2 } from 'lucide-vue-next'
 import StoreSpotlightContent from '../storeSpotlight/StoreSpotlightContent.vue'
 import ProductSelector from '../collections/ProductSelector.vue'
+import UiInput from '@/components/ui/input/Input.vue'
+import SbKeywordTargetingSection from '../shared/SbKeywordTargetingSection.vue'
 
 const { form } = storeToRefs(useSbStore())
 
@@ -77,6 +122,7 @@ const storeSpotlightRef = ref(null)
 const videoFileInputRef = ref(null)
 
 const errors = reactive({
+  adName: '',
   products: '',
   video: ''
 })
@@ -112,17 +158,28 @@ function validate() {
     if (!r.ok) {
       errorItems.push(...r.errorItems)
     }
-
+    errors.adName = ''
     errors.video = ''
+  } else if (!form.value.headline?.trim()) {
+    errors.adName = 'Ad name is required.'
+    errorItems.push({ subItem: 'Ad name', label: 'Ad name', anchorId: 'section-sb-video-ad-name' })
   } else {
-    if (form.value.products.length < 3) {
-      errors.products = form.value.products.length === 0
-        ? 'Please add at least 3 products.'
-        : `Please add ${3 - form.value.products.length} more product${3 - form.value.products.length > 1 ? 's' : ''} (minimum 3 required).`
-      errorItems.push({ subItem: 'Products', label: 'Products', anchorId: 'section-sb-products' })
+    errors.adName = ''
+  }
+
+  // Products / Product 在两种 landing 下均为必填
+  if (form.value.videoLandingType === 'store') {
+    if (form.value.products.length < 1) {
+      errors.products = 'Please add 1 product.'
+      errorItems.push({ subItem: 'Products', label: 'Product', anchorId: 'section-sb-products' })
     } else {
       errors.products = ''
     }
+  } else if (form.value.products.length < 1) {
+    errors.products = 'Please add at least 1 product.'
+    errorItems.push({ subItem: 'Products', label: 'Products', anchorId: 'section-sb-products' })
+  } else {
+    errors.products = ''
   }
 
   const ok = errorItems.length === 0
@@ -169,6 +226,14 @@ defineExpose({ validate })
   line-height: 1.55;
 }
 
+/* Store on Amazon 单产品卡片：描述脱离 title-group，独立放在 section 内 */
+.card-desc {
+  margin: -12px 0 0;
+  font-size: var(--text-base, 14px);
+  color: var(--text-sub);
+  line-height: 1.55;
+}
+
 .required {
   color: var(--color-danger);
   font-size: var(--text-sm, 13px);
@@ -179,6 +244,25 @@ defineExpose({ validate })
   font-size: var(--text-sm, 13px);
   color: var(--color-danger);
   line-height: 1.4;
+}
+
+.error-msg--field {
+  margin-top: 6px;
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+.headline-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 500px;
+}
+
+.has-error :deep(input) {
+  border-color: var(--color-danger) !important;
 }
 
 .video-file-input {

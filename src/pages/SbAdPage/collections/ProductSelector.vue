@@ -70,6 +70,28 @@
               <span class="product-asin">ASIN: {{ p.asin }}</span>
               <span class="product-price">{{ p.price }}</span>
             </div>
+            <!-- 单选场景：在 ASIN 下方提供「重新选择」入口，点击重新打开抽屉 -->
+            <button
+              v-if="max === 1"
+              type="button"
+              class="reselect-btn"
+              @click="pickerOpen = true"
+            >
+              <svg
+                class="reselect-btn__icon"
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10.9519 1.30859L14.6921 5.04879L5.07379 14.6671L1.33359 14.6671L1.33359 10.9269L10.9519 1.30859ZM10.9519 3.19421L9.09732 5.04879L10.9519 6.90337L12.8065 5.04879L10.9519 3.19421ZM10.0091 7.84618L8.15451 5.9916L2.66692 11.4792L2.66692 13.3338H4.5215L10.0091 7.84618ZM14.8168 14.6671H8.45476V13.3338L14.8168 13.3338V14.6671Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Reselect</span>
+            </button>
           </div>
         </div>
         <button type="button" class="remove-btn" @click="removeProduct(i)">
@@ -267,6 +289,32 @@ function onPickerConfirm(list) {
 .product-price {
   color: #fe4041;
   font-weight: 500;
+}
+
+/* 单选场景下的 Reselect 链接式按钮：与 ASIN 同字号，颜色 #0056E0 */
+.reselect-btn {
+  margin-top: 4px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm, 13px);
+  line-height: 1.4;
+  color: #0056e0;
+  cursor: pointer;
+}
+
+.reselect-btn:hover {
+  text-decoration: underline;
+}
+
+.reselect-btn__icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 .remove-btn {

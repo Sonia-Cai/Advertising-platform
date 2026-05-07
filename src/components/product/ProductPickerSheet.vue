@@ -29,16 +29,26 @@
             </div>
           </div>
 
-          <div class="picker-list-wrap">
+          <div class="picker-list-wrap" :role="singleSelect ? 'radiogroup' : undefined">
             <button
               v-for="p in filteredCatalog"
               :key="p.id"
               type="button"
               class="picker-row"
               :class="{ selected: isSelected(p.id) }"
+              :role="singleSelect ? 'radio' : undefined"
+              :aria-checked="singleSelect ? isSelected(p.id) : undefined"
               @click="toggleRow(p.id)"
             >
-              <CheckboxIndicator :checked="isSelected(p.id)" />
+              <span
+                v-if="singleSelect"
+                class="picker-radio"
+                :class="{ 'picker-radio--checked': isSelected(p.id) }"
+                aria-hidden="true"
+              >
+                <span v-if="isSelected(p.id)" class="picker-radio__inner" />
+              </span>
+              <CheckboxIndicator v-else :checked="isSelected(p.id)" />
               <div class="picker-product-card">
                 <div class="picker-thumb">
                   <div class="picker-thumb-bg" aria-hidden="true" />
@@ -76,7 +86,7 @@
 
           <footer class="picker-footer">
             <span class="picker-count">
-              Selected: {{ selectedCount }} / {{ catalogTotal }}
+              Selected: {{ selectedCount }} / {{ props.maxSelection ?? catalogTotal }}
             </span>
             <div class="picker-actions">
               <button type="button" class="picker-btn picker-btn--outline" @click="onCancel">Cancel</button>
@@ -102,6 +112,9 @@ import {
 } from 'radix-vue'
 import { X } from 'lucide-vue-next'
 import CheckboxIndicator from '@/components/ui/checkbox/CheckboxIndicator.vue'
+import { useToast } from '@/components/ui/toast/useToast'
+
+const { toast } = useToast()
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -109,8 +122,13 @@ const props = defineProps({
   catalogTotal: { type: Number, required: true },
   /** Product ids currently in the ad group (sync when opening) */
   initialSelectedIds: { type: Array, default: () => [] },
+  /** 上限：1 表示单选；>1 表示多选并按上限拦截；null 表示不限 */
+  maxSelection: { type: Number, default: null },
   title: { type: String, default: 'Select the products you want to advertise for this ad group' }
 })
+
+/** 单选模式：max=1 时点击切换的同时会清空其它选项，并以 radio 视觉呈现 */
+const singleSelect = computed(() => props.maxSelection === 1)
 
 const emit = defineEmits(['update:open', 'confirm'])
 
@@ -138,9 +156,24 @@ function isSelected(id) {
 }
 
 function toggleRow(id) {
+  if (singleSelect.value) {
+    draftIds.value = isSelected(id) ? new Set() : new Set([id])
+    return
+  }
   const next = new Set(draftIds.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    if (props.maxSelection != null && next.size >= props.maxSelection) {
+      toast({
+        variant: 'limit',
+        description: `Select up to ${props.maxSelection} products.`,
+        duration: 3500
+      })
+      return
+    }
+    next.add(id)
+  }
   draftIds.value = next
 }
 
@@ -490,6 +523,32 @@ function onConfirm() {
 
 .picker-asin {
   color: #999;
+}
+
+/* 单选模式：圆形 radio 视觉 */
+.picker-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.picker-radio--checked {
+  border-color: #1876ff;
+}
+
+.picker-radio__inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1876ff;
 }
 
 .picker-empty {

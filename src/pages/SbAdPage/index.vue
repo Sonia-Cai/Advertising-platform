@@ -53,13 +53,23 @@ const hasTriedToSubmit = ref(false)
 const activeSubItem = ref('')
 const errorSubItems = ref([])
 
-const subItemsMap = {
-  collections: [
-    { label: 'Ad name',      anchorId: 'section-sb-ad-name' },
-    { label: 'Landing page', anchorId: 'section-sb-landing-page' },
-    { label: 'Targeting',    anchorId: 'section-sb-ad-targeting' }
-  ],
-}
+const collectionsSubItems = computed(() => {
+  const base = [{ label: 'Ad name', anchorId: 'section-sb-ad-name' }]
+  if (form.value.targetingAuto) {
+    base.push(
+      { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
+      { label: 'Product exclusions', anchorId: 'section-sb-product-exclusions' }
+    )
+  } else {
+    base.push({ label: 'Products', anchorId: 'section-sb-products' })
+    if (form.value.storeSpotlightManualTargetType === 'keyword') {
+      base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
+    } else {
+      base.push({ label: 'Product targeting', anchorId: 'section-sb-ad-product-targeting' })
+    }
+  }
+  return base
+})
 
 const storeSpotlightAdNavSubItems = computed(() => {
   const base = [
@@ -83,16 +93,23 @@ const videoSubItems = computed(() => {
       { label: 'Headline', anchorId: 'section-sb-ss-headline' },
       { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
       { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
-      { label: 'Video', anchorId: 'section-sb-video' }
+      { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
+      { label: 'Video', anchorId: 'section-sb-video' },
+      { label: 'Products', anchorId: 'section-sb-products' }
     ]
   }
-  return [{ label: 'Products', anchorId: 'section-sb-products' }]
+  return [
+    { label: 'Ad name', anchorId: 'section-sb-video-ad-name' },
+    { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
+    { label: 'Products', anchorId: 'section-sb-products' }
+  ]
 })
 
 const currentSubItems = computed(() => {
   if (form.value.adFormat === 'video') return videoSubItems.value
   if (form.value.adFormat === 'store_spotlight') return storeSpotlightAdNavSubItems.value
-  return subItemsMap[form.value.adFormat] || []
+  if (form.value.adFormat === 'collections') return collectionsSubItems.value
+  return []
 })
 
 let observer = null
@@ -137,7 +154,13 @@ watch(() => form.value.videoLandingType, () => {
 })
 
 watch(() => form.value.storeSpotlightManualTargetType, () => {
-  if (form.value.adFormat === 'store_spotlight') {
+  if (form.value.adFormat === 'store_spotlight' || form.value.adFormat === 'collections') {
+    setTimeout(setupObserver, 100)
+  }
+})
+
+watch(() => form.value.targetingAuto, () => {
+  if (form.value.adFormat === 'collections') {
     setTimeout(setupObserver, 100)
   }
 })
