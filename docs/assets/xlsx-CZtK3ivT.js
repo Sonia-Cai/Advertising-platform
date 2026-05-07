@@ -1,4 +1,4 @@
-import{c as Oc}from"./createLucideIcon-D2u8sgpv.js";import{_ as Ic,o as D0,c as O0,a as Rc,F as Nc,j as bc,n as Yn,t as Pc}from"./index-DifF-cRx.js";/**
+import{c as Oc}from"./createLucideIcon-D2J-38l6.js";import{_ as Ic,o as D0,c as O0,a as Rc,F as Nc,j as bc,n as Yn,t as Pc}from"./index-dy6f82_A.js";/**
  * @license lucide-vue-next v1.0.0 - ISC
  *
  * This source code is licensed under the ISC license.

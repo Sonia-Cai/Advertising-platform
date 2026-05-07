@@ -37,7 +37,7 @@ export const useSbStore = defineStore('sb', () => {
     audiencePct: 0,
 
     // ── Step 2: Ad Group ──────────────────────────
-    adGroupName: 'Ad Group 1',
+    adGroupName: '',
     adGroupBid: 0.75,
 
     // Ad Format (driver → affects Step 3 content structure)
@@ -50,7 +50,7 @@ export const useSbStore = defineStore('sb', () => {
     storeSpotlightManualTargetType: 'keyword', // 'keyword' | 'product'
 
     // Landing page (for Store spotlight + Video, set in Step 2)
-    videoLandingType: 'store',  // 'store' | 'product_detail'
+    videoLandingType: 'product_detail',  // 'store' | 'product_detail'
     videoStorePage: '',         // selected page id for Video + Store on Amazon
 
     // ── Step 3: Ad ──────────────────────────
@@ -127,12 +127,12 @@ export const useSbStore = defineStore('sb', () => {
       audienceMode: 'don_t_increase',
       audienceId: '',
       audiencePct: 0,
-      adGroupName: 'Ad Group 1',
+      adGroupName: '',
       adGroupBid: 0.75,
       adFormat: 'collections',
       targetingAuto: true,
       storeSpotlightManualTargetType: 'keyword',
-      videoLandingType: 'store',
+      videoLandingType: 'product_detail',
       videoStorePage: '',
       headline: '',
       landingPageType: 'store',

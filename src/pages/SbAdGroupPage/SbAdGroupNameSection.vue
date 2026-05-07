@@ -1,52 +1,77 @@
 <template>
   <section id="section-sb-ad-group-name" class="card">
     <h2>Ad group name <span class="required">*</span></h2>
-    <div id="field-sb-ad-group-name" class="input-wrap" :class="{ 'has-error': error }">
+    <div id="field-sb-ad-group-name" class="input-wrap" :class="{ 'has-error': error || lengthHint }">
       <UiInput
         size="lg"
-        v-model="form.adGroupName"
-        :class="{ 'input-error': error }"
-        @input="error = ''"
+        :model-value="form.adGroupName"
+        :class="{ 'input-error': error || lengthHint }"
+        @update:model-value="onAdGroupNameInput"
       />
     </div>
     <p v-if="error" class="error-msg">{{ error }}</p>
+    <p v-else-if="lengthHint" class="error-msg">{{ lengthHint }}</p>
   </section>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
 import UiInput from '@/components/ui/input/Input.vue'
 
+const AD_GROUP_NAME_MAX = 100
+/** 历史默认占位：视为未自定义，进入本步时仍用 Campaign Name 覆盖 */
+const LEGACY_DEFAULT_AD_GROUP = 'Ad Group 1'
+
 const { form } = storeToRefs(useSbStore())
 const error = ref('')
+const lengthHint = ref('')
 
-function adGroupNameFromCampaignFirstTwoFields(campaignName) {
-  const s = String(campaignName ?? '').trim()
-  if (!s) return ''
-  const parts = s.split('+').map((p) => p.trim()).filter(Boolean)
-  if (!parts.length) return ''
-  if (parts.length === 1) return parts[0]
-  return `${parts[0]}+${parts[1]}`
+/** 进入 Ad Group 步骤时：空（或历史默认）则同步 Campaign Name（整段复制，无后缀），仍可由用户编辑 */
+function applyDefaultAdGroupFromCampaign() {
+  const current = form.value.adGroupName?.trim() ?? ''
+  if (current !== '' && current !== LEGACY_DEFAULT_AD_GROUP) return
+
+  const cn = String(form.value.campaignName ?? '').trim()
+  if (!cn) {
+    form.value.adGroupName = ''
+    return
+  }
+  if (cn.length > AD_GROUP_NAME_MAX) {
+    form.value.adGroupName = cn.slice(0, AD_GROUP_NAME_MAX)
+    lengthHint.value = '名称过长，请精简'
+  } else {
+    form.value.adGroupName = cn
+  }
+}
+
+function onAdGroupNameInput(val) {
+  const raw = String(val ?? '')
+  error.value = ''
+  if (raw.length > AD_GROUP_NAME_MAX) {
+    form.value.adGroupName = raw.slice(0, AD_GROUP_NAME_MAX)
+    lengthHint.value = '名称过长，请精简'
+  } else {
+    form.value.adGroupName = raw
+    lengthHint.value = ''
+  }
 }
 
 onMounted(() => {
-  if (!form.value.adGroupName?.trim()) {
-    const derived = adGroupNameFromCampaignFirstTwoFields(form.value.campaignName)
-    form.value.adGroupName = derived || 'Ad Group 1'
-  }
-})
-
-watch(() => form.value.adGroupName, (val) => {
-  if (error.value && val?.trim()) error.value = ''
+  applyDefaultAdGroupFromCampaign()
 })
 
 function validate() {
   const errorItems = []
+  const name = form.value.adGroupName?.trim() ?? ''
 
-  if (!form.value.adGroupName?.trim()) {
+  if (!name) {
     error.value = 'Ad group name is required.'
+    lengthHint.value = ''
+    errorItems.push({ subItem: 'Ad group name', label: 'Ad group name', anchorId: 'field-sb-ad-group-name' })
+  } else if (name.length > AD_GROUP_NAME_MAX) {
+    error.value = '名称过长，请精简'
     errorItems.push({ subItem: 'Ad group name', label: 'Ad group name', anchorId: 'field-sb-ad-group-name' })
   } else {
     error.value = ''
@@ -85,6 +110,12 @@ h2 {
 .required {
   color: var(--color-danger);
   font-size: var(--text-sm, 13px);
+}
+
+/* 与 SB Campaign Name（#field-campaign-name .input-wrap）同宽：占满卡片内容区 */
+#field-sb-ad-group-name.input-wrap {
+  max-width: none;
+  width: 100%;
 }
 
 .input-wrap {

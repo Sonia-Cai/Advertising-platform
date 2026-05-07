@@ -1,4 +1,4 @@
-import{av as l}from"./index-DifF-cRx.js";/**
+import{aw as l}from"./index-dy6f82_A.js";/**
  * @license lucide-vue-next v1.0.0 - ISC
  *
  * This source code is licensed under the ISC license.
@@ -43,4 +43,4 @@ import{av as l}from"./index-DifF-cRx.js";/**
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const A=(t,e)=>(o,{slots:r,attrs:n})=>l(k,{...n,...o,iconNode:e,name:t},r);export{A as c};
+ */const v=(t,e)=>(o,{slots:r,attrs:n})=>l(k,{...n,...o,iconNode:e,name:t},r);export{v as c};

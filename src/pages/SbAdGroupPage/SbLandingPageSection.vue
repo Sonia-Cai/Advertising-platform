@@ -1,25 +1,65 @@
 <template>
   <!-- Store spotlight: landing card + manual targeting must be separate sections (distinct anchors / cards). -->
   <template v-if="form.adFormat === 'store_spotlight'">
-    <section id="section-sb-landing-page" class="card">
-      <h2>Landing page</h2>
-      <div class="lp-option static">
-        <span class="radio-dot checked"><span class="radio-dot-inner" /></span>
-        <div class="lp-option-body">
-          <p class="lp-option-title">Store on Amazon</p>
-          <p class="lp-option-hint">(must have 4 or more pages, each with 1 or more unique products)</p>
+    <section id="section-sb-landing-page" class="card card--landing-collapsible">
+      <h2 class="landing-page-heading-row">
+        <button
+          type="button"
+          class="landing-page-toggle"
+          :aria-expanded="spotlightLandingOpen"
+          aria-controls="sb-landing-page-panel"
+          id="sb-landing-page-toggle"
+          @click="spotlightLandingOpen = !spotlightLandingOpen"
+        >
+          <span
+            class="landing-page-toggle__chevron"
+            :class="{ 'landing-page-toggle__chevron--open': spotlightLandingOpen }"
+            aria-hidden="true"
+          >
+            <svg
+              class="landing-page-toggle__chevron-svg"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6.49411 3.57712C6.64157 3.42964 6.83897 3.34281 7.04733 3.33379C7.25569 3.32476 7.45986 3.39419 7.61953 3.52837L7.67244 3.57712L13.5058 9.41045C13.6533 9.55791 13.7401 9.75532 13.7491 9.96368C13.7581 10.172 13.6887 10.3762 13.5545 10.5359L13.5058 10.5888L7.67244 16.4221C7.52051 16.5737 7.31596 16.6608 7.1014 16.6653C6.88684 16.6698 6.67882 16.5913 6.52066 16.4463C6.3625 16.3012 6.2664 16.1007 6.25237 15.8866C6.23835 15.6725 6.30747 15.4611 6.44536 15.2967L6.49411 15.2438L11.7374 9.99962L6.49411 4.75545C6.34663 4.60799 6.25981 4.41059 6.25078 4.20223C6.24176 3.99387 6.31119 3.7897 6.44536 3.63003L6.49411 3.57712Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <span class="landing-page-card__title landing-page-toggle__label">Landing page</span>
+        </button>
+      </h2>
+      <Transition name="slide-landing">
+        <div
+          v-show="spotlightLandingOpen"
+          id="sb-landing-page-panel"
+          class="landing-page-collapsible-panel"
+          role="region"
+          aria-labelledby="sb-landing-page-toggle"
+        >
+          <div class="lp-option static">
+            <span class="radio-dot checked"><span class="radio-dot-inner" /></span>
+            <div class="lp-option-body">
+              <p class="lp-option-title">Store on Amazon</p>
+              <p class="lp-option-hint">(must have 4 or more pages, each with 1 or more unique products)</p>
+            </div>
+          </div>
+          <div class="store-display">
+            <label class="store-field-label">Choose a Store</label>
+            <div class="store-name-box">DREO</div>
+          </div>
         </div>
-      </div>
-      <div class="store-display">
-        <label class="store-field-label">Choose a Store</label>
-        <div class="store-name-box">DREO</div>
-      </div>
+      </Transition>
     </section>
     <SbStoreSpotlightManualTargetingSection />
   </template>
 
   <section v-else-if="form.adFormat === 'video'" id="section-sb-landing-page" class="card">
-    <h2>Landing page</h2>
+    <h2 class="landing-page-card__title">Landing page</h2>
 
     <div class="tip-row">
         <span class="tip-icon">✦</span>
@@ -29,8 +69,16 @@
         </p>
       </div>
 
+      <!-- Product detail page（置顶） -->
+      <label class="radio-line" @click="form.videoLandingType = 'product_detail'">
+        <span class="radio-dot" :class="{ checked: form.videoLandingType === 'product_detail' }">
+          <span v-if="form.videoLandingType === 'product_detail'" class="radio-dot-inner" />
+        </span>
+        <p class="lp-option-title">Product detail page</p>
+      </label>
+
       <!-- Store on Amazon -->
-      <label class="radio-line" @click="form.videoLandingType = 'store'">
+      <label class="radio-line radio-gap" @click="form.videoLandingType = 'store'">
         <span class="radio-dot" :class="{ checked: form.videoLandingType === 'store' }">
           <span v-if="form.videoLandingType === 'store'" class="radio-dot-inner" />
         </span>
@@ -57,24 +105,19 @@
           </div>
         </div>
       </Transition>
-
-      <!-- Product detail page -->
-      <label class="radio-line radio-gap" @click="form.videoLandingType = 'product_detail'">
-        <span class="radio-dot" :class="{ checked: form.videoLandingType === 'product_detail' }">
-          <span v-if="form.videoLandingType === 'product_detail'" class="radio-dot-inner" />
-        </span>
-        <p class="lp-option-title">Product detail page</p>
-      </label>
   </section>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
 import UiSelect from '@/components/ui/select/Select.vue'
 import SbStoreSpotlightManualTargetingSection from './SbStoreSpotlightManualTargetingSection.vue'
-
 const { form } = storeToRefs(useSbStore())
+
+/** Store spotlight：Landing page 卡片默认折叠 */
+const spotlightLandingOpen = ref(false)
 
 const storePageOptions = [
   { value: 'home',       label: 'DREO Home' },
@@ -95,11 +138,72 @@ const storePageOptions = [
   gap: 16px;
 }
 
-h2 {
+/* Landing page 标题色（设计 #0C1322，等价于 rgb(12, 19, 34) / rgba(12, 19, 34, 1)） */
+.landing-page-card__title {
   margin: 0;
   font-size: var(--text-2xl, 22px);
   font-weight: 600;
-  color: var(--text-main);
+  color: #0c1322;
+}
+
+.landing-page-heading-row {
+  margin: 0;
+  font-size: var(--text-2xl, 22px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.landing-page-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: #0c1322;
+}
+
+.landing-page-toggle:focus-visible {
+  outline: 2px solid var(--primary, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.landing-page-toggle__chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: #0c1322;
+  line-height: 0;
+  transition: transform 0.2s ease;
+}
+
+.landing-page-toggle__chevron-svg {
+  display: block;
+}
+
+.landing-page-toggle__chevron--open {
+  transform: rotate(90deg);
+}
+
+.landing-page-toggle__label {
+  margin: 0;
+}
+
+.landing-page-collapsible-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.card--landing-collapsible {
+  gap: 0;
 }
 
 /* Tip row */
@@ -242,5 +346,16 @@ h2 {
 .slide-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+.slide-landing-enter-active,
+.slide-landing-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.slide-landing-enter-from,
+.slide-landing-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

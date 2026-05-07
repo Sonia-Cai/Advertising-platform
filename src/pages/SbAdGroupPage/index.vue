@@ -44,7 +44,10 @@ const { steps, getStepNumber, getNextPath, getBackPath } = useSbFlowSteps()
 const adGroupNameRef = ref(null)
 const hasTriedToSubmit = ref(false)
 
-const adGroupHasError = computed(() => !form.value.adGroupName?.trim())
+const adGroupHasError = computed(() => {
+  const n = form.value.adGroupName?.trim() ?? ''
+  return !n || n.length > 100
+})
 
 const errorSubItems = computed(() => {
   if (!hasTriedToSubmit.value) return []

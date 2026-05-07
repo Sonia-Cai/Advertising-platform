@@ -1,5 +1,5 @@
 <template>
-  <TopNav :user-name="userName" page-title="New SP Campaign" />
+  <TopNav :user-name="userName" page-title="New SB Campaign" />
   <RouterView />
   <Toaster />
 </template>
