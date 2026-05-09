@@ -36,6 +36,12 @@
         </div>
 
         <div v-if="form.keywordTargetTab === 'amazon'" class="kt-toolbar">
+          <div class="toolbar-field">
+            <span class="toolbar-label">Custom Bid</span>
+            <div class="enter-bid-wrap">
+              <InlineNumberInput v-model="form.keywordTargetingDefaultBid" :step="0.01" suffix="USD" size="default" />
+            </div>
+          </div>
           <div class="toolbar-field match-types">
             <span class="toolbar-label">Match type</span>
             <label class="chk"><UiCheckbox v-model="form.keywordTargetingMatchTypes.exact" /> Exact</label>
@@ -52,7 +58,7 @@
             rows="10"
           />
           <div class="enter-bottom-row">
-            <div class="enter-upload-side">
+            <div v-if="!showUploadTab" class="enter-upload-side">
               <input
                 ref="enterFileInput"
                 type="file"
@@ -71,6 +77,23 @@
             <div class="enter-actions">
               <UiButton type="button" size="sm" variant="default" @click="commitEnterList">Add keywords</UiButton>
             </div>
+          </div>
+        </div>
+
+        <div v-else-if="form.keywordTargetTab === 'upload'" class="kt-panel kt-panel--upload">
+          <input
+            ref="enterFileInput"
+            type="file"
+            accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            class="enter-file-input-hidden"
+            @change="onEnterListFile"
+          />
+          <div class="upload-panel-card">
+            <button type="button" class="enter-upload-lite" @click="triggerEnterFilePick">Upload file</button>
+            <button type="button" class="enter-download-template" @click="downloadEnterListTemplate">
+              <Download :size="14" :stroke-width="2" />
+              Download the XLSX template
+            </button>
           </div>
         </div>
 
@@ -315,11 +338,52 @@ import iconHelpCircle from '@/assets/icon-help-circle.svg'
 
 const { form } = storeToRefs(useSbStore())
 
-const tabs = [
-  { id: 'enter', label: 'Enter list' },
-  { id: 'campaigns', label: 'Select from campaigns' },
-  { id: 'amazon', label: 'Amazon Suggested' },
-]
+const isStoreSpotlightSeparateKeywordTargeting = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.adFormat === 'store_spotlight'
+  && form.value.storeSpotlightManualTargetType === 'keyword'
+))
+const usesCollectionsKeywordTargetingLayout = computed(() => (
+  form.value.adFormat === 'collections'
+  || isStoreSpotlightSeparateKeywordTargeting.value
+))
+const showUploadTab = computed(() => usesCollectionsKeywordTargetingLayout.value)
+
+const tabs = computed(() => {
+  if (form.value.adFormat === 'collections' && form.value.targetingAuto) {
+    return [
+      { id: 'enter', label: 'Enter list' },
+      { id: 'upload', label: 'Upload file' },
+    ]
+  }
+
+  if (
+    (form.value.adFormat === 'collections' && !form.value.targetingAuto)
+    || isStoreSpotlightSeparateKeywordTargeting.value
+  ) {
+    return [
+      { id: 'amazon', label: 'Suggested' },
+      { id: 'enter', label: 'Enter list' },
+      { id: 'upload', label: 'Upload file' },
+    ]
+  }
+
+  return [
+    { id: 'enter', label: 'Enter list' },
+    { id: 'campaigns', label: 'Select from campaigns' },
+    { id: 'amazon', label: 'Amazon Suggested' },
+  ]
+})
+
+watch(
+  tabs,
+  (nextTabs) => {
+    if (!nextTabs.some((tab) => tab.id === form.value.keywordTargetTab)) {
+      form.value.keywordTargetTab = nextTabs[0]?.id ?? 'enter'
+    }
+  },
+  { immediate: true }
+)
 
 const enterListText = ref('')
 const enterFileInput = ref(null)
@@ -650,6 +714,18 @@ h2 {
 }
 
 .kt-panel--campaigns { padding-top: 18px; }
+
+.kt-panel--upload {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 18px;
+}
+
+.upload-panel-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .kt-panel--enter {
   display: flex;

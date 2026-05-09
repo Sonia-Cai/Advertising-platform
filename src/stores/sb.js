@@ -49,14 +49,18 @@ export const useSbStore = defineStore('sb', () => {
     // Store spotlight (Step 2): same Manual Targeting choice as SP → drives Step 3 modules
     storeSpotlightManualTargetType: 'keyword', // 'keyword' | 'product'
 
-    // Landing page (for Store spotlight + Video, set in Step 2)
+    // Landing page (for Collections manual + Video, set in Step 2)
     videoLandingType: 'product_detail',  // 'store' | 'product_detail'
     videoStorePage: '',         // selected page id for Video + Store on Amazon
 
     // ── Step 3: Ad ──────────────────────────
     // Common fields
     headline: '',              // max 50 chars
-    landingPageType: 'store',  // 'store' | 'product_detail' (constrained by goals)
+    adTitleMode: 'auto_generate', // 'auto_generate' | 'standard' | 'custom'
+    adStandardTitle: '',
+    adCustomTitle: '',
+    landingPageType: 'product_detail',  // 'store' | 'product_detail' (constrained by goals)
+    landingStorePage: '',      // selected page id for Collections + Store on Amazon
 
     // Products (for Collections + Video)
     // { id, asin, title, image, rating, reviews, originalPrice, price, inStock }
@@ -135,7 +139,11 @@ export const useSbStore = defineStore('sb', () => {
       videoLandingType: 'product_detail',
       videoStorePage: '',
       headline: '',
-      landingPageType: 'store',
+      adTitleMode: 'auto_generate',
+      adStandardTitle: '',
+      adCustomTitle: '',
+      landingPageType: 'product_detail',
+      landingStorePage: '',
       products: [],
       keywordTargetTab: 'enter',
       keywordTargetingDefaultBid: 0.75,

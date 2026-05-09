@@ -152,15 +152,15 @@
             </div>
             <div class="review-card__body">
               <dl class="kv-grid">
-                <div class="kv-item">
+                <div v-if="!hideNegativeKeywordSummary" class="kv-item">
                   <dt>Negative keywords</dt>
                   <dd>{{ form.negativeKeywords.length }}</dd>
                 </div>
-                <div class="kv-item">
+                <div v-if="!hideNegativeProductBrandSummary" class="kv-item">
                   <dt>Excluded products</dt>
                   <dd>{{ form.excludedProducts.length }}</dd>
                 </div>
-                <div class="kv-item">
+                <div v-if="!hideNegativeProductBrandSummary" class="kv-item">
                   <dt>Excluded brands</dt>
                   <dd>{{ form.excludedBrands.length }}</dd>
                 </div>
@@ -242,6 +242,27 @@ const storeSpotlightManualTargetingLabel = computed(() =>
     ? 'Keyword targeting'
     : 'Product targeting'
 )
+
+const hideNegativeProductBrandSummary = computed(() => (
+  form.value.adFormat === 'collections'
+  && (
+    (
+      form.value.goals === 'drive_page_visits'
+      && (
+        form.value.targetingAuto
+        || form.value.storeSpotlightManualTargetType === 'keyword'
+      )
+    )
+    || form.value.goals === 'brand_impression_share'
+  )
+))
+
+const hideNegativeKeywordSummary = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.adFormat === 'collections'
+  && !form.value.targetingAuto
+  && form.value.storeSpotlightManualTargetType === 'product'
+))
 
 const sbProductTargetProductCount = computed(() =>
   form.value.productTargets.filter(t => t.kind === 'product').length

@@ -167,12 +167,14 @@
 
     </div>
 
-    <template v-if="effectiveTargetType === 'keyword'">
+    <SbStoreSpotlightManualTargetingSection v-if="showManualTargetingInAd" />
+
+    <template v-if="effectiveTargetType === 'keyword' && !showSeparateKeywordTargetingStep">
       <p v-if="errors.keywords" class="error-msg ss-flow-error">{{ errors.keywords }}</p>
       <SbKeywordTargetingSection />
     </template>
 
-    <div v-else id="section-sb-ss-products" class="sb-product-targeting-wrap">
+    <div v-if="effectiveTargetType === 'product' && !showSeparateProductTargetingStep" id="section-sb-ss-products" class="sb-product-targeting-wrap">
       <p v-if="errors.productTargeting" class="error-msg ss-flow-error">{{ errors.productTargeting }}</p>
       <ProductTargetingPanels
         :form="form"
@@ -193,6 +195,7 @@ import UiInput from '@/components/ui/input/Input.vue'
 import Switch from '@/components/ui/switch/Switch.vue'
 import UiSelect from '@/components/ui/select/Select.vue'
 import SbKeywordTargetingSection from '../shared/SbKeywordTargetingSection.vue'
+import SbStoreSpotlightManualTargetingSection from '@/pages/SbAdGroupPage/SbStoreSpotlightManualTargetingSection.vue'
 import ProductTargetingPanels from '@/components/product-targeting/ProductTargetingPanels.vue'
 
 const props = defineProps({
@@ -207,6 +210,26 @@ const { form } = storeToRefs(useSbStore())
 const effectiveTargetType = computed(() =>
   props.targetingModeOverride || form.value.storeSpotlightManualTargetType
 )
+
+const showManualTargetingInAd = computed(() => (
+  form.value.adFormat === 'store_spotlight'
+  && (
+    form.value.goals === 'drive_page_visits'
+    || form.value.goals === 'brand_impression_share'
+  )
+))
+
+const showSeparateKeywordTargetingStep = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.adFormat === 'store_spotlight'
+  && effectiveTargetType.value === 'keyword'
+))
+
+const showSeparateProductTargetingStep = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.adFormat === 'store_spotlight'
+  && effectiveTargetType.value === 'product'
+))
 
 const optimizeHeadline = ref(false)
 const ssHeadline = ref('')
@@ -252,7 +275,7 @@ function validate() {
     errors.adName = ''
   }
 
-  if (effectiveTargetType.value === 'keyword') {
+  if (effectiveTargetType.value === 'keyword' && !showSeparateKeywordTargetingStep.value) {
     errors.productTargeting = ''
     if (form.value.keywords.length === 0) {
       errors.keywords = 'Please add at least one keyword.'
@@ -262,7 +285,11 @@ function validate() {
     }
   } else {
     errors.keywords = ''
-    if (form.value.productTargets.length === 0) {
+    if (
+      effectiveTargetType.value === 'product'
+      && !showSeparateProductTargetingStep.value
+      && form.value.productTargets.length === 0
+    ) {
       errors.productTargeting = 'Please add at least one product or category target.'
       errorItems.push({ subItem: 'Product targeting', label: 'Product targeting', anchorId: 'section-sb-ss-products' })
     } else {

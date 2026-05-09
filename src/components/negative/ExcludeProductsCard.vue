@@ -86,7 +86,7 @@
           </div>
         </template>
 
-        <template v-else>
+        <template v-else-if="leftTab === 'enter'">
           <div class="ep-enter-block">
             <textarea
               v-model="enterListText"
@@ -95,7 +95,7 @@
               rows="8"
             />
             <div class="ep-enter-bottom-row">
-              <div class="ep-enter-upload-side">
+              <div v-if="!showUploadTab" class="ep-enter-upload-side">
                 <input
                   ref="fileInputRef"
                   type="file"
@@ -118,6 +118,27 @@
                   Add products
                 </UiButton>
               </div>
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="leftTab === 'upload'">
+          <div class="ep-upload-panel">
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              class="ep-file-hidden"
+              @change="onUploadFile"
+            />
+            <div class="ep-enter-file-actions">
+              <button type="button" class="ep-upload-lite" @click="triggerFilePick">
+                Upload file
+              </button>
+              <button type="button" class="ep-download-template" @click="downloadTemplate">
+                <Download class="ep-download-template__icon" :size="14" :stroke-width="2" aria-hidden="true" />
+                Download the XLSX template
+              </button>
             </div>
           </div>
         </template>
@@ -225,9 +246,11 @@ const MOCK_PRODUCTS = [
 
 /* ── Search ── */
 const leftTab = ref('enter')
+const showUploadTab = true
 const leftTabs = [
   { id: 'enter', label: 'Enter list' },
   { id: 'search', label: 'Search' },
+  { id: 'upload', label: 'Upload' },
 ]
 
 const searchQuery = ref('')
@@ -687,6 +710,11 @@ function removeAll() {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+.ep-upload-panel {
+  position: relative;
+  padding: 18px 20px;
 }
 
 .ep-file-hidden {

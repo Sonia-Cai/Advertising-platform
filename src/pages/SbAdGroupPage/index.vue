@@ -14,10 +14,12 @@
           <SbAdGroupNameSection ref="adGroupNameRef" />
           <SbAdFormatSection />
           <SbTargetingSection v-if="form.adFormat === 'collections'" />
-          <SbStoreSpotlightManualTargetingSection
-            v-if="form.adFormat === 'collections' && !form.targetingAuto"
+          <SbLandingPageSection
+            v-if="showCollectionsManualLandingPage || form.adFormat === 'store_spotlight' || form.adFormat === 'video'"
           />
-          <SbLandingPageSection v-if="form.adFormat === 'store_spotlight' || form.adFormat === 'video'" />
+          <SbStoreSpotlightManualTargetingSection
+            v-if="showCollectionsManualTargeting"
+          />
         </main>
       </div>
     </div>
@@ -53,6 +55,22 @@ const adGroupHasError = computed(() => {
   return !n || n.length > 100
 })
 
+const showCollectionsManualLandingPage = computed(() => (
+  (
+    form.value.goals === 'drive_page_visits'
+    || form.value.goals === 'brand_impression_share'
+  )
+  && form.value.adFormat === 'collections'
+  && !form.value.targetingAuto
+))
+
+const showCollectionsManualTargeting = computed(() => (
+  form.value.adFormat === 'collections'
+  && !form.value.targetingAuto
+  && form.value.goals !== 'drive_page_visits'
+  && form.value.goals !== 'brand_impression_share'
+))
+
 const errorSubItems = computed(() => {
   if (!hasTriedToSubmit.value) return []
   const errs = []
@@ -67,12 +85,19 @@ const subItems = computed(() => {
   ]
   if (form.value.adFormat === 'collections') {
     base.push({ label: 'Collection type', anchorId: 'section-sb-collection-type' })
-    if (!form.value.targetingAuto) {
+    if (showCollectionsManualLandingPage.value) {
+      base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
+    }
+    if (showCollectionsManualTargeting.value) {
       base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
     }
   } else if (form.value.adFormat === 'store_spotlight' || form.value.adFormat === 'video') {
     base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
-    if (form.value.adFormat === 'store_spotlight') {
+    if (
+      form.value.adFormat === 'store_spotlight'
+      && form.value.goals !== 'drive_page_visits'
+      && form.value.goals !== 'brand_impression_share'
+    ) {
       base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
     }
   }

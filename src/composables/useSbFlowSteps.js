@@ -17,31 +17,102 @@ function buildAdGroupSubItems(form) {
   ]
   if (form.adFormat === 'collections') {
     base.push({ label: 'Collection type', anchorId: 'section-sb-collection-type' })
-    if (!form.targetingAuto) {
+    if (
+      (
+        form.goals === 'drive_page_visits'
+        || form.goals === 'brand_impression_share'
+      )
+      && !form.targetingAuto
+    ) {
+      base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
+    }
+    if (
+      !form.targetingAuto
+      && form.goals !== 'drive_page_visits'
+      && form.goals !== 'brand_impression_share'
+    ) {
       base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
     }
   } else if (form.adFormat === 'store_spotlight' || form.adFormat === 'video') {
     base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
+    if (
+      form.adFormat === 'store_spotlight'
+      && form.goals !== 'drive_page_visits'
+      && form.goals !== 'brand_impression_share'
+    ) {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
   }
   return base
 }
 
 function buildCollectionsAdSubItems(form) {
   const base = [{ label: 'Ad name', anchorId: 'section-sb-ad-name' }]
+  const hasSeparateKeywordTargetingStep = (
+    form.goals === 'drive_page_visits'
+    && !form.targetingAuto
+    && form.storeSpotlightManualTargetType === 'keyword'
+  )
+  const hasSeparateProductTargetingStep = (
+    form.goals === 'drive_page_visits'
+    && !form.targetingAuto
+    && form.storeSpotlightManualTargetType === 'product'
+  )
   if (form.targetingAuto) {
     base.push(
       { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
       { label: 'Product exclusions', anchorId: 'section-sb-product-exclusions' }
     )
   } else {
+    if (form.goals === 'drive_page_visits' || form.goals === 'brand_impression_share') {
+      base.push({ label: 'Ad title', anchorId: 'section-sb-ad-title' })
+    }
     base.push({ label: 'Products', anchorId: 'section-sb-products' })
-    if (form.storeSpotlightManualTargetType === 'keyword') {
+    if (form.goals === 'drive_page_visits') {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
+    if (form.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
       base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
-    } else {
+    } else if (form.storeSpotlightManualTargetType === 'product' && !hasSeparateProductTargetingStep) {
       base.push({ label: 'Product targeting', anchorId: 'section-sb-ad-product-targeting' })
     }
   }
   return base
+}
+
+function shouldShowKeywordTargetingStep(form) {
+  return (
+    (
+      form.adFormat === 'collections'
+      && !form.targetingAuto
+      && (
+        (
+          form.goals === 'drive_page_visits'
+          && form.storeSpotlightManualTargetType === 'keyword'
+        )
+        || form.goals === 'brand_impression_share'
+      )
+    )
+    || (
+      form.goals === 'drive_page_visits'
+      && form.adFormat === 'store_spotlight'
+      && form.storeSpotlightManualTargetType === 'keyword'
+    )
+  )
+}
+
+function shouldShowProductTargetingStep(form) {
+  return (
+    form.goals === 'drive_page_visits'
+    && form.storeSpotlightManualTargetType === 'product'
+    && (
+      (
+        form.adFormat === 'collections'
+        && !form.targetingAuto
+      )
+      || form.adFormat === 'store_spotlight'
+    )
+  )
 }
 
 function buildVideoAdSubItems(form) {
@@ -70,19 +141,66 @@ function buildStoreSpotlightAdSubItems(form) {
     { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
     { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
   ]
-  if (form.storeSpotlightManualTargetType === 'keyword') {
+  if (
+    form.goals === 'drive_page_visits'
+    || form.goals === 'brand_impression_share'
+  ) {
+    base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+  }
+  const hasSeparateKeywordTargetingStep = (
+    form.goals === 'drive_page_visits'
+    && form.storeSpotlightManualTargetType === 'keyword'
+  )
+  const hasSeparateProductTargetingStep = (
+    form.goals === 'drive_page_visits'
+    && form.storeSpotlightManualTargetType === 'product'
+  )
+
+  if (form.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
     base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
   } else {
-    base.push({ label: 'Product targeting', anchorId: 'section-sb-ss-products' })
+    if (form.storeSpotlightManualTargetType === 'product' && !hasSeparateProductTargetingStep) {
+      base.push({ label: 'Product targeting', anchorId: 'section-sb-ss-products' })
+    }
   }
   return base
 }
 
-const negativeSubItems = [
-  { label: 'Negative keyword', anchorId: 'section-negative-keyword' },
-  { label: 'Exclude products', anchorId: 'section-negative-product' },
-  { label: 'Exclude brands',   anchorId: 'section-negative-brand' }
-]
+function buildNegativeSubItems(form) {
+  const base = []
+  const hideProductBrandExclusions = (
+    form.adFormat === 'collections'
+    && (
+      (
+        form.goals === 'drive_page_visits'
+        && (
+          form.targetingAuto
+          || form.storeSpotlightManualTargetType === 'keyword'
+        )
+      )
+      || (
+        form.goals === 'brand_impression_share'
+      )
+    )
+  )
+  const hideNegativeKeyword = (
+    form.goals === 'drive_page_visits'
+    && form.adFormat === 'collections'
+    && !form.targetingAuto
+    && form.storeSpotlightManualTargetType === 'product'
+  )
+
+  if (!hideNegativeKeyword) {
+    base.push({ label: 'Negative keyword', anchorId: 'section-negative-keyword' })
+  }
+  if (!hideProductBrandExclusions) {
+    base.push(
+      { label: 'Exclude products', anchorId: 'section-negative-product' },
+      { label: 'Exclude brands', anchorId: 'section-negative-brand' }
+    )
+  }
+  return base
+}
 
 export function useSbFlowSteps() {
   const store = useSbStore()
@@ -112,7 +230,13 @@ export function useSbFlowSteps() {
 
     nextSteps.push(
       { label: 'Ad', path: '/sb/ad', subItems: adSubItems },
-      { label: 'Negative（optional）', path: '/sb/negative', subItems: negativeSubItems },
+      ...(shouldShowKeywordTargetingStep(form.value)
+        ? [{ label: 'Keyword Targeting', path: '/sb/keyword-targeting' }]
+        : []),
+      ...(shouldShowProductTargetingStep(form.value)
+        ? [{ label: 'Product Targeting', path: '/sb/product-targeting' }]
+        : []),
+      { label: 'Negative（optional）', path: '/sb/negative', subItems: buildNegativeSubItems(form.value) },
       { label: 'Launch campaign', path: '/sb/launch' }
     )
 

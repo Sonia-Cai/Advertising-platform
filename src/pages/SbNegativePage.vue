@@ -13,6 +13,7 @@
 
           <!-- Negative Keyword Section（与 SP 共用同一组件） -->
           <NegativeKeywordCard
+            v-if="!hideNegativeKeyword"
             anchor-id="section-negative-keyword"
             :list="form.negativeKeywords"
             @update:list="form.negativeKeywords = $event"
@@ -20,6 +21,7 @@
 
           <!-- Exclude Products Section（与 SP 共用同一组件） -->
           <ExcludeProductsCard
+            v-if="!hideProductBrandExclusions"
             anchor-id="section-negative-product"
             :list="form.excludedProducts"
             @update:list="form.excludedProducts = $event"
@@ -27,6 +29,7 @@
 
           <!-- Exclude Brands Section（与 SP 共用同一组件） -->
           <ExcludeBrandsCard
+            v-if="!hideProductBrandExclusions"
             anchor-id="section-negative-brand"
             :list="form.excludedBrands"
             @update:list="form.excludedBrands = $event"
@@ -41,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
@@ -56,17 +59,49 @@ const router = useRouter()
 const { steps, getStepNumber, getNextPath, getBackPath } = useSbFlowSteps()
 const { form } = storeToRefs(useSbStore())
 
-const negativeSubItems = [
-  { label: 'Negative keyword', anchorId: 'section-negative-keyword' },
-  { label: 'Exclude products', anchorId: 'section-negative-product' },
-  { label: 'Exclude brands', anchorId: 'section-negative-brand' }
-]
+const hideProductBrandExclusions = computed(() => (
+  form.value.adFormat === 'collections'
+  && (
+    (
+      form.value.goals === 'drive_page_visits'
+      && (
+        form.value.targetingAuto
+        || form.value.storeSpotlightManualTargetType === 'keyword'
+      )
+    )
+    || (
+      form.value.goals === 'brand_impression_share'
+    )
+  )
+))
+
+const hideNegativeKeyword = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.adFormat === 'collections'
+  && !form.value.targetingAuto
+  && form.value.storeSpotlightManualTargetType === 'product'
+))
+
+const negativeSubItems = computed(() => {
+  const base = []
+  if (!hideNegativeKeyword.value) {
+    base.push({ label: 'Negative keyword', anchorId: 'section-negative-keyword' })
+  }
+  if (!hideProductBrandExclusions.value) {
+    base.push(
+      { label: 'Exclude products', anchorId: 'section-negative-product' },
+      { label: 'Exclude brands', anchorId: 'section-negative-brand' }
+    )
+  }
+  return base
+})
 
 const activeSubItem = ref('Negative keyword')
 
-let observer = null
-onMounted(() => {
-  const sectionEls = negativeSubItems
+function setupObserver() {
+  observer?.disconnect()
+
+  const sectionEls = negativeSubItems.value
     .map(s => ({ label: s.label, el: document.getElementById(s.anchorId) }))
     .filter(s => s.el)
 
@@ -82,10 +117,20 @@ onMounted(() => {
     { rootMargin: '-20% 0px -60% 0px', threshold: 0 }
   )
   sectionEls.forEach(s => observer.observe(s.el))
+}
+
+let observer = null
+onMounted(() => {
+  setupObserver()
 })
 
 onUnmounted(() => {
   observer?.disconnect()
+})
+
+watch(negativeSubItems, () => {
+  activeSubItem.value = negativeSubItems.value[0]?.label ?? ''
+  nextTick(setupObserver)
 })
 
 function onCancel() { router.push('/') }

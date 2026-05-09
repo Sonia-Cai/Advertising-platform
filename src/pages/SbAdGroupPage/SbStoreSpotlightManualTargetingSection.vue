@@ -1,8 +1,15 @@
 <template>
   <section id="section-sb-store-spotlight-manual-targeting" class="card">
     <div class="card-header">
-      <h2>Choose keyword or product targeting</h2>
+      <div class="title-group">
+        <h2>Manual Targeting</h2>
+        <p>Targeting uses keywords and products to help your ads appear in search and detail pages.</p>
+      </div>
     </div>
+
+    <hr />
+
+    <p class="section-label">Choose keyword or product targeting</p>
 
     <div class="options">
       <RadioCard v-model="form.storeSpotlightManualTargetType" value="keyword">
@@ -27,7 +34,7 @@ const { form } = storeToRefs(useSbStore())
 </script>
 
 <style scoped>
-/* Align with SP CampaignPage/TargetingSection.vue */
+/* Align with SP AdGroupPage/sections/ManualTargetingSection.vue */
 .card {
   background: var(--bg-card);
   border-radius: var(--radius-card);
@@ -35,15 +42,37 @@ const { form } = storeToRefs(useSbStore())
 }
 
 .card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  padding-bottom: 8px;
 }
 
-h2 {
+.title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.title-group h2 {
   margin: 0;
   font-size: var(--text-2xl, 22px);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.title-group p {
+  margin: 4px 0 0;
+  font-size: var(--text-base, 14px);
+  color: var(--text-sub);
+  line-height: 1.4;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0 0 20px;
+}
+
+.section-label {
+  margin: 0 0 12px;
+  font-size: var(--text-base, 14px);
   font-weight: 600;
   color: var(--text-main);
 }

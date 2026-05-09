@@ -26,10 +26,16 @@
                   <!-- Row 2: left content | right content -->
                   <div class="pt-left-stack">
                     <div v-if="showProductBrowseToolbar" class="pt-toolbar">
-                      <div class="toolbar-field match-row">
-                        <span class="toolbar-label">Targeting type</span>
-                        <label class="chk"><UiCheckbox v-model="form.productDeliveryType.exact" /> Exact</label>
-                        <label class="chk"><UiCheckbox v-model="form.productDeliveryType.expanded" /> Expanded</label>
+                      <div class="toolbar-field">
+                        <span class="toolbar-label">Custom Bid</span>
+                        <div class="enter-bid-wrap">
+                          <InlineNumberInput
+                            v-model="form.productTargetingDefaultBid"
+                            :step="0.01"
+                            suffix="USD"
+                            size="default"
+                          />
+                        </div>
                       </div>
                     </div>
     
@@ -46,11 +52,6 @@
                           />
                         </div>
                       </div>
-                      <div class="toolbar-field match-row">
-                        <span class="toolbar-label">Targeting type</span>
-                        <label class="chk"><UiCheckbox v-model="form.productDeliveryType.exact" /> Exact</label>
-                        <label class="chk"><UiCheckbox v-model="form.productDeliveryType.expanded" /> Expanded</label>
-                      </div>
                     </div>
     
                     <div v-if="form.productProductTab === 'enter'" class="pt-panel pt-panel--enter">
@@ -61,7 +62,7 @@
                         rows="10"
                       />
                       <div class="enter-bottom-row">
-                        <div class="enter-upload-side">
+                        <div v-if="!useProductUploadTab" class="enter-upload-side">
                           <input
                             ref="productEnterFileInput"
                             type="file"
@@ -86,6 +87,26 @@
                         </div>
                       </div>
                     </div>
+
+                    <!-- ── Products: upload ── -->
+                    <div v-else-if="form.productProductTab === 'upload'" class="pt-panel pt-panel--upload">
+                      <input
+                        ref="productEnterFileInput"
+                        type="file"
+                        accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                        class="enter-file-input-hidden"
+                        @change="onProductEnterListFile"
+                      />
+                      <div class="upload-panel-card">
+                        <button type="button" class="enter-upload-lite" @click="triggerProductEnterFilePick">
+                          Upload file
+                        </button>
+                        <button type="button" class="enter-download-template" @click="downloadProductEnterListTemplate">
+                          <Download class="enter-download-template__icon" :size="14" :stroke-width="2" aria-hidden="true" />
+                          Download the XLSX template
+                        </button>
+                      </div>
+                    </div>
     
                     <!-- ── Products: suggested ── -->
                     <div v-else-if="form.productProductTab === 'suggested'" class="pt-panel">
@@ -93,7 +114,7 @@
                         <thead>
                           <tr>
                             <th class="col-product">Product</th>
-                            <th>Type</th>
+                            <th v-if="showProductTypeColumn">Type</th>
                             <th>Suggested bid</th>
                             <th class="action-col" aria-label="Action"></th>
                           </tr>
@@ -127,7 +148,7 @@
                                   </div>
                                 </div>
                               </td>
-                              <td>{{ p.matchType === 'exact' ? 'Exact' : 'Expanded' }}</td>
+                              <td v-if="showProductTypeColumn">{{ p.matchType === 'exact' ? 'Exact' : 'Expanded' }}</td>
                               <td>
                                 <span class="sugg-main">{{ p.suggestBid }}</span>
                                 <div v-if="p.suggestRange" class="sugg-range">{{ p.suggestRange }}</div>
@@ -197,6 +218,66 @@
                           </template>
                         </tbody>
                       </table>
+                    </div>
+
+                    <!-- ── Products: search ── -->
+                    <div v-else-if="form.productProductTab === 'search'" class="pt-panel pt-panel--search">
+                      <div class="pt-toolbar pt-toolbar--in-panel">
+                        <div class="toolbar-field">
+                          <span class="toolbar-label">Custom Bid</span>
+                          <div class="enter-bid-wrap">
+                            <InlineNumberInput
+                              v-model="form.productTargetingDefaultBid"
+                              :step="0.01"
+                              suffix="USD"
+                              size="default"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pt-search-bar">
+                        <input
+                          v-model="productSearchQuery"
+                          class="pt-search"
+                          type="text"
+                          placeholder="Search by product name or ASIN"
+                        />
+                        <button class="pt-search-btn" type="button">Search</button>
+                      </div>
+                      <table v-if="filteredSearchProducts.length > 0" class="data-table product-table">
+                        <thead>
+                          <tr>
+                            <th class="col-product">Product</th>
+                            <th v-if="showProductTypeColumn">Type</th>
+                            <th>Suggested bid</th>
+                            <th class="action-col" aria-label="Action"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="p in filteredSearchProducts" :key="p.id">
+                            <td class="col-product">
+                              <div class="prod-cell">
+                                <div class="prod-thumb">
+                                  <img :src="p.image" :alt="p.title" />
+                                </div>
+                                <div class="prod-text">
+                                  <p class="cell-title">{{ p.title }}</p>
+                                  <p class="cell-meta">ASIN: {{ p.asin }}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td v-if="showProductTypeColumn">{{ p.matchType === 'exact' ? 'Exact' : 'Expanded' }}</td>
+                            <td>
+                              <span class="sugg-main">{{ p.suggestBid }}</span>
+                              <div v-if="p.suggestRange" class="sugg-range">{{ p.suggestRange }}</div>
+                            </td>
+                            <td class="action-col">
+                              <button type="button" class="text-add-btn" aria-label="Add product" @click="addProduct(p)">Add</button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <p v-else class="pt-search-empty">No products found.</p>
                     </div>
     
                     <!-- ── Products: campaigns ── -->
@@ -367,8 +448,9 @@
                       <table class="data-table added-table">
                         <thead>
                           <tr>
-                            <th>Product</th>
-                            <th>Type</th>
+                            <th>{{ productTargetNameColumnLabel }}</th>
+                            <th v-if="showProductTypeColumn">Type</th>
+                            <th v-if="showProductSuggestedBidColumn">Suggested bid</th>
                             <th>Bid</th>
                             <th class="action-col" aria-label="Action"></th>
                           </tr>
@@ -408,7 +490,7 @@
                                 </div>
                               </template>
                             </td>
-                            <td class="col-type">
+                            <td v-if="showProductTypeColumn" class="col-type">
                               <div class="added-match-select">
                                 <UiSelect
                                   v-model="row.deliveryType"
@@ -416,6 +498,10 @@
                                   :options="deliveryTypeOptions"
                                 />
                               </div>
+                            </td>
+                            <td v-if="showProductSuggestedBidColumn">
+                              <div class="sugg-main">{{ row.suggestBid || '—' }}</div>
+                              <div v-if="row.suggestRange" class="sugg-range">{{ row.suggestRange }}</div>
                             </td>
                             <td>
                               <span class="bid-input-wrap bid-input-wrap--minimal">
@@ -468,6 +554,19 @@
                   <div class="pt-left-stack">
                     <!-- ── Categories: Amazon suggested ── -->
                     <div v-if="form.productCategoryTab === 'suggested'" class="pt-panel">
+                      <div class="pt-toolbar pt-toolbar--in-panel">
+                        <div class="toolbar-field">
+                          <span class="toolbar-label">Custom Bid</span>
+                          <div class="enter-bid-wrap">
+                            <InlineNumberInput
+                              v-model="form.productTargetingDefaultBid"
+                              :step="0.01"
+                              suffix="USD"
+                              size="default"
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <table class="data-table">
                         <thead>
                           <tr>
@@ -495,6 +594,19 @@
     
                     <!-- ── Categories: Search（与 Negative · Exclude products 同构） ── -->
                     <div v-else-if="form.productCategoryTab === 'search'" class="pt-panel pt-panel--search">
+                      <div class="pt-toolbar pt-toolbar--in-panel">
+                        <div class="toolbar-field">
+                          <span class="toolbar-label">Custom Bid</span>
+                          <div class="enter-bid-wrap">
+                            <InlineNumberInput
+                              v-model="form.productTargetingDefaultBid"
+                              :step="0.01"
+                              suffix="USD"
+                              size="default"
+                            />
+                          </div>
+                        </div>
+                      </div>
                       <div class="pt-search-bar">
                         <input
                           v-model="categorySearchQuery"
@@ -549,6 +661,7 @@
                         <thead>
                           <tr>
                             <th>Category</th>
+                            <th>Suggested bid</th>
                             <th>Bid</th>
                             <th class="action-col" aria-label="Action"></th>
                           </tr>
@@ -557,6 +670,10 @@
                           <tr v-for="row in categoryTargets" :key="row.id">
                             <td>
                               <p class="cell-title">{{ row.title }}</p>
+                            </td>
+                            <td>
+                              <div class="sugg-main">{{ row.suggestBid || '—' }}</div>
+                              <div v-if="row.suggestRange" class="sugg-range">{{ row.suggestRange }}</div>
                             </td>
                             <td>
                               <span class="bid-input-wrap bid-input-wrap--minimal">
@@ -599,29 +716,53 @@ const props = defineProps({
   form: { type: Object, required: true },
   productTitle: { type: String, default: 'Products' },
   categoryTitle: { type: String, default: 'Categories' },
+  productTabsVariant: { type: String, default: 'default' },
 })
 
 const form = toRef(props, 'form')
 const productTitle = toRef(props, 'productTitle')
 const categoryTitle = toRef(props, 'categoryTitle')
+const productTabsVariant = toRef(props, 'productTabsVariant')
 
 const deliveryTypeOptions = [
   { label: 'Exact',    value: 'Exact' },
   { label: 'Expanded', value: 'Expanded' }
 ]
 
-const categorySubTabs = [
-  { id: 'suggested', label: 'Amazon suggested' },
+const categorySubTabs = computed(() => [
+  {
+    id: 'suggested',
+    label: productTabsVariant.value === 'sbCollectionsManual' ? 'Suggested' : 'Amazon suggested',
+  },
   { id: 'search', label: 'Search' },
-]
+])
 
-const productSubTabs = [
-  { id: 'enter', label: 'Enter list' },
-  { id: 'campaigns', label: 'Select from campaigns' },
-  { id: 'suggested', label: 'Amazon suggested' },
-]
+const useProductUploadTab = computed(() => productTabsVariant.value === 'sbCollectionsManual')
+const showProductTypeColumn = computed(() => productTabsVariant.value !== 'sbCollectionsManual')
+const showProductSuggestedBidColumn = computed(() => productTabsVariant.value === 'sbCollectionsManual')
+const productTargetNameColumnLabel = computed(() => (
+  productTabsVariant.value === 'sbCollectionsManual' ? 'Products' : 'Product'
+))
+
+const productSubTabs = computed(() => {
+  if (productTabsVariant.value === 'sbCollectionsManual') {
+    return [
+      { id: 'suggested', label: 'Suggested' },
+      { id: 'search', label: 'Search' },
+      { id: 'enter', label: 'Enter list' },
+      { id: 'upload', label: 'Upload' },
+    ]
+  }
+
+  return [
+    { id: 'enter', label: 'Enter list' },
+    { id: 'campaigns', label: 'Select from campaigns' },
+    { id: 'suggested', label: 'Amazon suggested' },
+  ]
+})
 
 const categorySearchQuery = ref('')
+const productSearchQuery = ref('')
 
 const showProductBrowseToolbar = computed(() => form.value.productProductTab === 'suggested')
 
@@ -828,6 +969,16 @@ watch(
   }
 )
 
+watch(
+  productSubTabs,
+  (nextTabs) => {
+    if (!nextTabs.some((tab) => tab.id === form.value.productProductTab)) {
+      form.value.productProductTab = nextTabs[0]?.id ?? 'enter'
+    }
+  },
+  { immediate: true }
+)
+
 const categoryTargets = computed(() =>
   form.value.productTargets.filter(t => t.kind === 'category')
 )
@@ -846,6 +997,16 @@ const filteredSuggestedProducts = computed(() => {
   if (exact && expanded) return suggestedProducts
   return suggestedProducts.filter(p =>
     exact ? p.matchType === 'exact' : p.matchType === 'expanded'
+  )
+})
+
+const filteredSearchProducts = computed(() => {
+  const q = productSearchQuery.value.trim().toLowerCase()
+  const rows = filteredSuggestedProducts.value
+  if (!q) return rows
+  return rows.filter((p) =>
+    p.title.toLowerCase().includes(q)
+    || p.asin.toLowerCase().includes(q)
   )
 })
 
@@ -1346,6 +1507,23 @@ function removeAllProducts() {
 
 .pt-panel--campaigns {
   padding-top: 18px;
+}
+
+.pt-panel--upload {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 18px;
+}
+
+.pt-toolbar--in-panel {
+  align-items: center;
+  padding: 18px 0;
+}
+
+.upload-panel-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .pt-panel--enter {

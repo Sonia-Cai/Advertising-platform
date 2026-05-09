@@ -56,10 +56,10 @@
         </div>
       </Transition>
     </section>
-    <SbStoreSpotlightManualTargetingSection />
+    <SbStoreSpotlightManualTargetingSection v-if="showStoreSpotlightManualTargetingInAdGroup" />
   </template>
 
-  <section v-else-if="form.adFormat === 'video'" id="section-sb-landing-page" class="card">
+  <section v-else-if="showStandardLandingPage" id="section-sb-landing-page" class="card">
     <h2 class="landing-page-card__title">Landing page</h2>
 
     <div class="tip-row">
@@ -71,17 +71,17 @@
       </div>
 
       <!-- Product detail page（置顶） -->
-      <label class="radio-line" @click="form.videoLandingType = 'product_detail'">
-        <span class="radio-dot" :class="{ checked: form.videoLandingType === 'product_detail' }">
-          <span v-if="form.videoLandingType === 'product_detail'" class="radio-dot-inner" />
+      <label class="radio-line" @click="selectedLandingType = 'product_detail'">
+        <span class="radio-dot" :class="{ checked: selectedLandingType === 'product_detail' }">
+          <span v-if="selectedLandingType === 'product_detail'" class="radio-dot-inner" />
         </span>
         <p class="lp-option-title">Product detail page</p>
       </label>
 
       <!-- Store on Amazon -->
-      <label class="radio-line radio-gap" @click="form.videoLandingType = 'store'">
-        <span class="radio-dot" :class="{ checked: form.videoLandingType === 'store' }">
-          <span v-if="form.videoLandingType === 'store'" class="radio-dot-inner" />
+      <label class="radio-line radio-gap" @click="selectedLandingType = 'store'">
+        <span class="radio-dot" :class="{ checked: selectedLandingType === 'store' }">
+          <span v-if="selectedLandingType === 'store'" class="radio-dot-inner" />
         </span>
         <div class="lp-option-body">
           <p class="lp-option-title">Store on Amazon</p>
@@ -90,7 +90,7 @@
       </label>
 
       <Transition name="slide">
-        <div v-if="form.videoLandingType === 'store'" class="store-selects">
+        <div v-if="selectedLandingType === 'store'" class="store-selects">
           <div class="store-field">
             <label class="store-field-label">Choose a Store</label>
             <div class="store-name-box">DREO</div>
@@ -98,7 +98,7 @@
           <div class="store-field">
             <label class="store-field-label">Choose a page</label>
             <UiSelect
-              v-model="form.videoStorePage"
+              v-model="selectedStorePage"
               size="lg"
               placeholder="Choose a page"
               :options="storePageOptions"
@@ -110,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
 import UiSelect from '@/components/ui/select/Select.vue'
@@ -119,6 +119,55 @@ const { form } = storeToRefs(useSbStore())
 
 /** Store spotlight：Landing page 卡片默认折叠 */
 const spotlightLandingOpen = ref(false)
+
+const showCollectionsManualLandingPage = computed(() => (
+  (
+    form.value.goals === 'drive_page_visits'
+    || form.value.goals === 'brand_impression_share'
+  )
+  && form.value.adFormat === 'collections'
+  && !form.value.targetingAuto
+))
+
+const showStandardLandingPage = computed(() => (
+  form.value.adFormat === 'video' || showCollectionsManualLandingPage.value
+))
+
+const showStoreSpotlightManualTargetingInAdGroup = computed(() => (
+  form.value.adFormat === 'store_spotlight'
+  && form.value.goals !== 'drive_page_visits'
+  && form.value.goals !== 'brand_impression_share'
+))
+
+const selectedLandingType = computed({
+  get() {
+    return form.value.adFormat === 'video'
+      ? form.value.videoLandingType
+      : form.value.landingPageType
+  },
+  set(value) {
+    if (form.value.adFormat === 'video') {
+      form.value.videoLandingType = value
+    } else {
+      form.value.landingPageType = value
+    }
+  }
+})
+
+const selectedStorePage = computed({
+  get() {
+    return form.value.adFormat === 'video'
+      ? form.value.videoStorePage
+      : form.value.landingStorePage
+  },
+  set(value) {
+    if (form.value.adFormat === 'video') {
+      form.value.videoStorePage = value
+    } else {
+      form.value.landingStorePage = value
+    }
+  }
+})
 
 const storePageOptions = [
   { value: 'home',       label: 'DREO Home' },

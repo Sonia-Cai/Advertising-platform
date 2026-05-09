@@ -55,17 +55,38 @@ const errorSubItems = ref([])
 
 const collectionsSubItems = computed(() => {
   const base = [{ label: 'Ad name', anchorId: 'section-sb-ad-name' }]
+  const hasSeparateKeywordTargetingStep = (
+    form.value.goals === 'drive_page_visits'
+    && !form.value.targetingAuto
+    && form.value.storeSpotlightManualTargetType === 'keyword'
+  )
+  const hasSeparateProductTargetingStep = (
+    form.value.goals === 'drive_page_visits'
+    && !form.value.targetingAuto
+    && form.value.storeSpotlightManualTargetType === 'product'
+  )
   if (form.value.targetingAuto) {
     base.push(
       { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
       { label: 'Product exclusions', anchorId: 'section-sb-product-exclusions' }
     )
   } else {
+    if (
+      form.value.goals === 'drive_page_visits'
+      || form.value.goals === 'brand_impression_share'
+    ) {
+      base.push({ label: 'Ad title', anchorId: 'section-sb-ad-title' })
+    }
     base.push({ label: 'Products', anchorId: 'section-sb-products' })
-    if (form.value.storeSpotlightManualTargetType === 'keyword') {
+    if (form.value.goals === 'drive_page_visits') {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
+    if (form.value.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
       base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
     } else {
-      base.push({ label: 'Product targeting', anchorId: 'section-sb-ad-product-targeting' })
+      if (form.value.storeSpotlightManualTargetType === 'product' && !hasSeparateProductTargetingStep) {
+        base.push({ label: 'Product targeting', anchorId: 'section-sb-ad-product-targeting' })
+      }
     }
   }
   return base
@@ -78,10 +99,26 @@ const storeSpotlightAdNavSubItems = computed(() => {
     { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
     { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
   ]
-  if (form.value.storeSpotlightManualTargetType === 'keyword') {
+  if (
+    form.value.goals === 'drive_page_visits'
+    || form.value.goals === 'brand_impression_share'
+  ) {
+    base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+  }
+  const hasSeparateKeywordTargetingStep = (
+    form.value.goals === 'drive_page_visits'
+    && form.value.storeSpotlightManualTargetType === 'keyword'
+  )
+  const hasSeparateProductTargetingStep = (
+    form.value.goals === 'drive_page_visits'
+    && form.value.storeSpotlightManualTargetType === 'product'
+  )
+  if (form.value.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
     base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
   } else {
-    base.push({ label: 'Product targeting', anchorId: 'section-sb-ss-products' })
+    if (form.value.storeSpotlightManualTargetType === 'product' && !hasSeparateProductTargetingStep) {
+      base.push({ label: 'Product targeting', anchorId: 'section-sb-ss-products' })
+    }
   }
   return base
 })

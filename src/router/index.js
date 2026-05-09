@@ -57,6 +57,16 @@ const routes = [
     meta: { step: 3, label: 'Ad', type: 'sb' }
   },
   {
+    path: '/sb/keyword-targeting',
+    component: () => import('@/pages/SbKeywordTargetingPage.vue'),
+    meta: { step: 4, label: 'Keyword Targeting', type: 'sb' }
+  },
+  {
+    path: '/sb/product-targeting',
+    component: () => import('@/pages/SbProductTargetingPage.vue'),
+    meta: { step: 4, label: 'Product Targeting', type: 'sb' }
+  },
+  {
     path: '/sb/negative',
     component: () => import('@/pages/SbNegativePage.vue'),
     meta: { step: 4, label: 'Negative targeting', type: 'sb' }
