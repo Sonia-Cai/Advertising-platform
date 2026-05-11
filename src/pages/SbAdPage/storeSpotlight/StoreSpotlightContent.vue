@@ -16,14 +16,19 @@
       </div>
     </section>
 
+    <slot name="after-ad-name" />
+
     <!-- Two-column area: left (Headline + Store pages + Brand assets) + right (Preview) -->
     <div class="store-spotlight-layout">
 
       <!-- Left column -->
       <div class="store-spotlight-content">
+        <template v-if="props.hideStoreAssetSections">
+          <slot name="store-asset-content" />
+        </template>
 
         <!-- 2. Headline -->
-        <section id="section-sb-ss-headline" class="card">
+        <section v-else id="section-sb-ss-headline" class="card">
           <h2>Headline</h2>
           <div class="field" :class="{ 'has-error': errors.headline }">
             <div class="headline-row">
@@ -49,7 +54,7 @@
         </section>
 
         <!-- 3. Brand Store Pages -->
-        <section id="section-sb-ss-store-pages" class="card">
+        <section v-if="!props.hideStoreAssetSections && !props.hideStorePagesSection" id="section-sb-ss-store-pages" class="card">
           <h2>Brand store pages</h2>
           <p class="section-desc">3 subcategories from your Brand Store, plus one image that best represents each subcategory.</p>
 
@@ -77,6 +82,14 @@
                 </div>
                 <div class="page-info">
                   <p class="page-category">{{ element.category }}</p>
+                  <label class="display-name-field">
+                    <span class="display-name-label">Display name</span>
+                    <UiInput
+                      v-model="element.displayName"
+                      size="lg"
+                      placeholder="Enter display name"
+                    />
+                  </label>
                   <div class="page-actions">
                     <button type="button" class="action-link">Change image</button>
                     <button type="button" class="action-link">Change page</button>
@@ -88,8 +101,10 @@
           </Draggable>
         </section>
 
+        <slot name="before-brand-assets" />
+
         <!-- 4. Brand Assets -->
-        <section id="section-sb-ss-brand-assets" class="card">
+        <section v-if="!props.hideStoreAssetSections" id="section-sb-ss-brand-assets" class="card">
           <h2>Brand assets</h2>
           <p class="section-desc">Use your registered brand logo to help shoppers recognize and connect with your brand.</p>
 
@@ -169,12 +184,12 @@
 
     <SbStoreSpotlightManualTargetingSection v-if="showManualTargetingInAd" />
 
-    <template v-if="effectiveTargetType === 'keyword' && !showSeparateKeywordTargetingStep">
+    <template v-if="!props.hideTargetingSections && effectiveTargetType === 'keyword' && !showSeparateKeywordTargetingStep">
       <p v-if="errors.keywords" class="error-msg ss-flow-error">{{ errors.keywords }}</p>
       <SbKeywordTargetingSection />
     </template>
 
-    <div v-if="effectiveTargetType === 'product' && !showSeparateProductTargetingStep" id="section-sb-ss-products" class="sb-product-targeting-wrap">
+    <div v-if="!props.hideTargetingSections && showInlineProductTargeting" id="section-sb-ss-products" class="sb-product-targeting-wrap">
       <p v-if="errors.productTargeting" class="error-msg ss-flow-error">{{ errors.productTargeting }}</p>
       <ProductTargetingPanels
         :form="form"
@@ -202,6 +217,18 @@ const props = defineProps({
   targetingModeOverride: {
     type: String,
     default: ''
+  },
+  hideTargetingSections: {
+    type: Boolean,
+    default: false
+  },
+  hideStoreAssetSections: {
+    type: Boolean,
+    default: false
+  },
+  hideStorePagesSection: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -213,22 +240,33 @@ const effectiveTargetType = computed(() =>
 
 const showManualTargetingInAd = computed(() => (
   form.value.adFormat === 'store_spotlight'
-  && (
-    form.value.goals === 'drive_page_visits'
-    || form.value.goals === 'brand_impression_share'
-  )
+  && form.value.goals === 'drive_page_visits'
 ))
 
 const showSeparateKeywordTargetingStep = computed(() => (
-  form.value.goals === 'drive_page_visits'
-  && form.value.adFormat === 'store_spotlight'
-  && effectiveTargetType.value === 'keyword'
+  form.value.adFormat === 'store_spotlight'
+  && (
+    (
+      form.value.goals === 'drive_page_visits'
+      && effectiveTargetType.value === 'keyword'
+    )
+    || form.value.goals === 'brand_impression_share'
+  )
 ))
 
 const showSeparateProductTargetingStep = computed(() => (
   form.value.goals === 'drive_page_visits'
   && form.value.adFormat === 'store_spotlight'
   && effectiveTargetType.value === 'product'
+))
+
+const showInlineProductTargeting = computed(() => (
+  effectiveTargetType.value === 'product'
+  && !showSeparateProductTargetingStep.value
+  && !(
+    form.value.goals === 'brand_impression_share'
+    && form.value.adFormat === 'store_spotlight'
+  )
 ))
 
 const optimizeHeadline = ref(false)
@@ -244,16 +282,19 @@ const storePages = ref([
   {
     id: 'sp-1',
     category: 'Heaters',
+    displayName: 'Heaters',
     image: 'https://m.media-amazon.com/images/I/81G+4gzszVL._AC_SY879_.jpg'
   },
   {
     id: 'sp-2',
     category: 'Humidifier',
+    displayName: 'Humidifier',
     image: 'https://m.media-amazon.com/images/I/61vQZ5V5qPL._AC_SL1500_.jpg'
   },
   {
     id: 'sp-3',
     category: 'Portable Heater',
+    displayName: 'Portable Heater',
     image: 'https://m.media-amazon.com/images/I/71pB9RvWyRL._AC_SL1500_.jpg'
   }
 ])
@@ -275,7 +316,10 @@ function validate() {
     errors.adName = ''
   }
 
-  if (effectiveTargetType.value === 'keyword' && !showSeparateKeywordTargetingStep.value) {
+  if (props.hideTargetingSections) {
+    errors.keywords = ''
+    errors.productTargeting = ''
+  } else if (effectiveTargetType.value === 'keyword' && !showSeparateKeywordTargetingStep.value) {
     errors.productTargeting = ''
     if (form.value.keywords.length === 0) {
       errors.keywords = 'Please add at least one keyword.'
@@ -285,11 +329,7 @@ function validate() {
     }
   } else {
     errors.keywords = ''
-    if (
-      effectiveTargetType.value === 'product'
-      && !showSeparateProductTargetingStep.value
-      && form.value.productTargets.length === 0
-    ) {
+    if (showInlineProductTargeting.value && form.value.productTargets.length === 0) {
       errors.productTargeting = 'Please add at least one product or category target.'
       errorItems.push({ subItem: 'Product targeting', label: 'Product targeting', anchorId: 'section-sb-ss-products' })
     } else {
@@ -485,6 +525,23 @@ h2 {
   font-size: var(--text-base, 14px);
   font-weight: 500;
   color: var(--text-main);
+}
+
+.display-name-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.display-name-label {
+  font-size: var(--text-sm, 13px);
+  font-weight: 500;
+  color: var(--text-sub);
+}
+
+.display-name-field :deep(.ui-input) {
+  max-width: 360px;
 }
 
 .page-actions {

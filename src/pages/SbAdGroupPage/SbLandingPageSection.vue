@@ -71,7 +71,12 @@
       </div>
 
       <!-- Product detail page（置顶） -->
-      <label class="radio-line" @click="selectedLandingType = 'product_detail'">
+      <label
+        class="radio-line"
+        :class="{ 'radio-line--disabled': isVideoBrandShareGoal }"
+        :aria-disabled="isVideoBrandShareGoal"
+        @click="selectProductDetailLanding"
+      >
         <span class="radio-dot" :class="{ checked: selectedLandingType === 'product_detail' }">
           <span v-if="selectedLandingType === 'product_detail'" class="radio-dot-inner" />
         </span>
@@ -110,7 +115,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSbStore } from '@/stores/sb'
 import UiSelect from '@/components/ui/select/Select.vue'
@@ -139,13 +144,20 @@ const showStoreSpotlightManualTargetingInAdGroup = computed(() => (
   && form.value.goals !== 'brand_impression_share'
 ))
 
+const isVideoBrandShareGoal = computed(() => (
+  form.value.goals === 'brand_impression_share'
+  && form.value.adFormat === 'video'
+))
+
 const selectedLandingType = computed({
   get() {
+    if (isVideoBrandShareGoal.value) return 'store'
     return form.value.adFormat === 'video'
       ? form.value.videoLandingType
       : form.value.landingPageType
   },
   set(value) {
+    if (isVideoBrandShareGoal.value && value === 'product_detail') return
     if (form.value.adFormat === 'video') {
       form.value.videoLandingType = value
     } else {
@@ -153,6 +165,21 @@ const selectedLandingType = computed({
     }
   }
 })
+
+watch(
+  isVideoBrandShareGoal,
+  (enabled) => {
+    if (enabled) {
+      form.value.videoLandingType = 'store'
+    }
+  },
+  { immediate: true }
+)
+
+function selectProductDetailLanding() {
+  if (isVideoBrandShareGoal.value) return
+  selectedLandingType.value = 'product_detail'
+}
 
 const selectedStorePage = computed({
   get() {
@@ -294,6 +321,16 @@ const storePageOptions = [
   gap: 10px;
   cursor: pointer;
   user-select: none;
+}
+
+.radio-line--disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.radio-line--disabled .radio-dot {
+  background: var(--gray-100, #f1f5f9);
+  border-color: var(--gray-300, #d0d7e2);
 }
 
 .radio-gap {

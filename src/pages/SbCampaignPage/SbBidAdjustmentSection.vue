@@ -5,7 +5,7 @@
     </div>
 
     <!-- Placements -->
-    <div id="section-sb-bid-adjustment" class="sub-section">
+    <div v-if="!hidePlacements" id="section-sb-bid-adjustment" class="sub-section">
       <div class="sub-label-row">
         <span class="sub-label">Placements</span>
         <div class="tooltip-wrap">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Audiences -->
-    <div class="sub-section">
+    <div v-if="!hideAudiences" class="sub-section">
       <div class="sub-label-row">
         <span class="sub-label">Audiences</span>
         <div class="tooltip-wrap">
@@ -102,6 +102,32 @@ const placements = [
   { key: 'bidTop',  label: 'Top of search (first page)' },
   { key: 'bidRest', label: 'Rest of search' }
 ]
+
+const hideAudiences = computed(() => (
+  form.value.goals === 'drive_page_visits'
+  && form.value.siteType === 'amazon_business'
+  && (
+    form.value.adFormat === 'collections'
+    || form.value.adFormat === 'store_spotlight'
+  )
+))
+
+const hidePlacements = computed(() => (
+  (
+    form.value.goals === 'brand_impression_share'
+    && form.value.siteType === 'amazon'
+    && (
+      form.value.adFormat === 'collections'
+      || form.value.adFormat === 'store_spotlight'
+      || form.value.adFormat === 'video'
+    )
+  )
+  || (
+    form.value.goals === 'drive_page_visits'
+    && form.value.siteType === 'amazon'
+    && form.value.adFormat === 'video'
+  )
+))
 
 watch(() => form.value.audienceMode, () => {
   form.value.audienceId = ''

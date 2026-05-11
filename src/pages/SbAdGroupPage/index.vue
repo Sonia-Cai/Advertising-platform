@@ -17,6 +17,7 @@
           <SbLandingPageSection
             v-if="showCollectionsManualLandingPage || form.adFormat === 'store_spotlight' || form.adFormat === 'video'"
           />
+          <SbBidAdjustmentSection v-if="showBidAdjustmentSection" />
           <SbStoreSpotlightManualTargetingSection
             v-if="showCollectionsManualTargeting"
           />
@@ -38,6 +39,7 @@ import BottomBar from '@/components/BottomBar.vue'
 import SbAdGroupNameSection from './SbAdGroupNameSection.vue'
 import SbAdFormatSection from './SbAdFormatSection.vue'
 import SbTargetingSection from './SbTargetingSection.vue'
+import SbBidAdjustmentSection from '../SbCampaignPage/SbBidAdjustmentSection.vue'
 import SbLandingPageSection from './SbLandingPageSection.vue'
 import SbStoreSpotlightManualTargetingSection from './SbStoreSpotlightManualTargetingSection.vue'
 import { useSbFlowSteps } from '@/composables/useSbFlowSteps'
@@ -71,6 +73,24 @@ const showCollectionsManualTargeting = computed(() => (
   && form.value.goals !== 'brand_impression_share'
 ))
 
+const showBidAdjustmentSection = computed(() => !(
+  form.value.siteType === 'amazon_business'
+  && (
+    (
+      form.value.goals === 'brand_impression_share'
+      && (
+        form.value.adFormat === 'collections'
+        || form.value.adFormat === 'store_spotlight'
+        || form.value.adFormat === 'video'
+      )
+    )
+    || (
+      form.value.goals === 'drive_page_visits'
+      && form.value.adFormat === 'video'
+    )
+  )
+))
+
 const errorSubItems = computed(() => {
   if (!hasTriedToSubmit.value) return []
   const errs = []
@@ -88,11 +108,19 @@ const subItems = computed(() => {
     if (showCollectionsManualLandingPage.value) {
       base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
     }
+    if (showBidAdjustmentSection.value) {
+      base.push({ label: 'Placements', anchorId: 'section-sb-placements' })
+      base.push({ label: 'Bid adjustment', anchorId: 'section-sb-bid-adjustment' })
+    }
     if (showCollectionsManualTargeting.value) {
       base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
     }
   } else if (form.value.adFormat === 'store_spotlight' || form.value.adFormat === 'video') {
     base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
+    if (showBidAdjustmentSection.value) {
+      base.push({ label: 'Placements', anchorId: 'section-sb-placements' })
+      base.push({ label: 'Bid adjustment', anchorId: 'section-sb-bid-adjustment' })
+    }
     if (
       form.value.adFormat === 'store_spotlight'
       && form.value.goals !== 'drive_page_visits'

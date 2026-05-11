@@ -5,12 +5,27 @@ import { useSbStore } from '@/stores/sb'
 const campaignSubItems = [
   { label: 'Settings',        anchorId: 'section-sb-settings' },
   { label: 'Goals',           anchorId: 'section-sb-goals' },
-  { label: 'Sites',           anchorId: 'section-sb-sites' },
-  { label: 'Placements',      anchorId: 'section-sb-placements' },
-  { label: 'Bid adjustment',  anchorId: 'section-sb-bid-adjustment' }
+  { label: 'Sites',           anchorId: 'section-sb-sites' }
 ]
 
 function buildAdGroupSubItems(form) {
+  const showBidAdjustmentSection = !(
+    form.siteType === 'amazon_business'
+    && (
+      (
+        form.goals === 'brand_impression_share'
+        && (
+          form.adFormat === 'collections'
+          || form.adFormat === 'store_spotlight'
+          || form.adFormat === 'video'
+        )
+      )
+      || (
+        form.goals === 'drive_page_visits'
+        && form.adFormat === 'video'
+      )
+    )
+  )
   const base = [
     { label: 'Ad group name', anchorId: 'section-sb-ad-group-name' },
     { label: 'Ad format', anchorId: 'section-sb-ad-format' },
@@ -26,6 +41,10 @@ function buildAdGroupSubItems(form) {
     ) {
       base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
     }
+    if (showBidAdjustmentSection) {
+      base.push({ label: 'Placements', anchorId: 'section-sb-placements' })
+      base.push({ label: 'Bid adjustment', anchorId: 'section-sb-bid-adjustment' })
+    }
     if (
       !form.targetingAuto
       && form.goals !== 'drive_page_visits'
@@ -35,6 +54,10 @@ function buildAdGroupSubItems(form) {
     }
   } else if (form.adFormat === 'store_spotlight' || form.adFormat === 'video') {
     base.push({ label: 'Landing page', anchorId: 'section-sb-landing-page' })
+    if (showBidAdjustmentSection) {
+      base.push({ label: 'Placements', anchorId: 'section-sb-placements' })
+      base.push({ label: 'Bid adjustment', anchorId: 'section-sb-bid-adjustment' })
+    }
     if (
       form.adFormat === 'store_spotlight'
       && form.goals !== 'drive_page_visits'
@@ -94,9 +117,27 @@ function shouldShowKeywordTargetingStep(form) {
       )
     )
     || (
-      form.goals === 'drive_page_visits'
-      && form.adFormat === 'store_spotlight'
-      && form.storeSpotlightManualTargetType === 'keyword'
+      form.adFormat === 'store_spotlight'
+      && (
+        (
+          form.goals === 'drive_page_visits'
+          && form.storeSpotlightManualTargetType === 'keyword'
+        )
+        || form.goals === 'brand_impression_share'
+      )
+    )
+    || (
+      form.adFormat === 'video'
+      && (
+        form.goals === 'brand_impression_share'
+        || (
+          (
+            form.videoLandingType === 'product_detail'
+            || form.videoLandingType === 'store'
+          )
+          && form.storeSpotlightManualTargetType === 'keyword'
+        )
+      )
     )
   )
 }
@@ -111,26 +152,44 @@ function shouldShowProductTargetingStep(form) {
         && !form.targetingAuto
       )
       || form.adFormat === 'store_spotlight'
+      || (
+        form.adFormat === 'video'
+        && (
+          form.videoLandingType === 'product_detail'
+          || form.videoLandingType === 'store'
+        )
+      )
     )
   )
 }
 
 function buildVideoAdSubItems(form) {
   if (form.videoLandingType === 'store') {
-    return [
+    const base = [
       { label: 'Ad name', anchorId: 'section-sb-ss-ad-name' },
       { label: 'Headline', anchorId: 'section-sb-ss-headline' },
-      { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
-      { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
-      { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
       { label: 'Video', anchorId: 'section-sb-video' },
-      { label: 'Products', anchorId: 'section-sb-products' }
+      { label: 'Products', anchorId: 'section-sb-products' },
+      { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' }
+    ]
+    if (form.goals !== 'brand_impression_share') {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
+    return base
+  }
+  if (form.goals === 'drive_page_visits') {
+    return [
+      { label: 'Ad name', anchorId: 'section-sb-ss-ad-name' },
+      { label: 'Product', anchorId: 'section-sb-products' },
+      { label: 'Video', anchorId: 'section-sb-video' },
+      { label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' }
     ]
   }
   return [
     { label: 'Ad name', anchorId: 'section-sb-video-ad-name' },
     { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
-    { label: 'Products', anchorId: 'section-sb-products' }
+    { label: 'Product', anchorId: 'section-sb-products' },
+    { label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' }
   ]
 }
 
@@ -141,19 +200,22 @@ function buildStoreSpotlightAdSubItems(form) {
     { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
     { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
   ]
-  if (
-    form.goals === 'drive_page_visits'
-    || form.goals === 'brand_impression_share'
-  ) {
+  if (form.goals === 'drive_page_visits') {
     base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
   }
   const hasSeparateKeywordTargetingStep = (
-    form.goals === 'drive_page_visits'
-    && form.storeSpotlightManualTargetType === 'keyword'
+    (
+      form.goals === 'drive_page_visits'
+      && form.storeSpotlightManualTargetType === 'keyword'
+    )
+    || form.goals === 'brand_impression_share'
   )
   const hasSeparateProductTargetingStep = (
-    form.goals === 'drive_page_visits'
-    && form.storeSpotlightManualTargetType === 'product'
+    (
+      form.goals === 'drive_page_visits'
+      && form.storeSpotlightManualTargetType === 'product'
+    )
+    || form.goals === 'brand_impression_share'
   )
 
   if (form.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
@@ -169,25 +231,57 @@ function buildStoreSpotlightAdSubItems(form) {
 function buildNegativeSubItems(form) {
   const base = []
   const hideProductBrandExclusions = (
-    form.adFormat === 'collections'
-    && (
-      (
-        form.goals === 'drive_page_visits'
-        && (
-          form.targetingAuto
-          || form.storeSpotlightManualTargetType === 'keyword'
+    (
+      form.adFormat === 'collections'
+      && (
+        (
+          form.goals === 'drive_page_visits'
+          && (
+            form.targetingAuto
+            || form.storeSpotlightManualTargetType === 'keyword'
+          )
+        )
+        || (
+          form.goals === 'brand_impression_share'
         )
       )
-      || (
+    )
+    || (
+      form.adFormat === 'store_spotlight'
+      && (
         form.goals === 'brand_impression_share'
+        || (
+          form.goals === 'drive_page_visits'
+          && form.storeSpotlightManualTargetType === 'keyword'
+        )
       )
+    )
+    || (
+      form.adFormat === 'video'
+      && (
+        form.videoLandingType === 'product_detail'
+        || form.videoLandingType === 'store'
+      )
+      && form.storeSpotlightManualTargetType === 'keyword'
     )
   )
   const hideNegativeKeyword = (
     form.goals === 'drive_page_visits'
-    && form.adFormat === 'collections'
-    && !form.targetingAuto
     && form.storeSpotlightManualTargetType === 'product'
+    && (
+      (
+        form.adFormat === 'collections'
+        && !form.targetingAuto
+      )
+      || form.adFormat === 'store_spotlight'
+      || (
+        form.adFormat === 'video'
+        && (
+          form.videoLandingType === 'product_detail'
+          || form.videoLandingType === 'store'
+        )
+      )
+    )
   )
 
   if (!hideNegativeKeyword) {

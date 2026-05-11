@@ -60,26 +60,58 @@ const { steps, getStepNumber, getNextPath, getBackPath } = useSbFlowSteps()
 const { form } = storeToRefs(useSbStore())
 
 const hideProductBrandExclusions = computed(() => (
-  form.value.adFormat === 'collections'
-  && (
-    (
-      form.value.goals === 'drive_page_visits'
-      && (
-        form.value.targetingAuto
-        || form.value.storeSpotlightManualTargetType === 'keyword'
+  (
+    form.value.adFormat === 'collections'
+    && (
+      (
+        form.value.goals === 'drive_page_visits'
+        && (
+          form.value.targetingAuto
+          || form.value.storeSpotlightManualTargetType === 'keyword'
+        )
+      )
+      || (
+        form.value.goals === 'brand_impression_share'
       )
     )
-    || (
+  )
+  || (
+    form.value.adFormat === 'store_spotlight'
+    && (
       form.value.goals === 'brand_impression_share'
+      || (
+        form.value.goals === 'drive_page_visits'
+        && form.value.storeSpotlightManualTargetType === 'keyword'
+      )
     )
+  )
+  || (
+    form.value.adFormat === 'video'
+    && (
+      form.value.videoLandingType === 'product_detail'
+      || form.value.videoLandingType === 'store'
+    )
+    && form.value.storeSpotlightManualTargetType === 'keyword'
   )
 ))
 
 const hideNegativeKeyword = computed(() => (
   form.value.goals === 'drive_page_visits'
-  && form.value.adFormat === 'collections'
-  && !form.value.targetingAuto
   && form.value.storeSpotlightManualTargetType === 'product'
+  && (
+    (
+      form.value.adFormat === 'collections'
+      && !form.value.targetingAuto
+    )
+    || form.value.adFormat === 'store_spotlight'
+    || (
+      form.value.adFormat === 'video'
+      && (
+        form.value.videoLandingType === 'product_detail'
+        || form.value.videoLandingType === 'store'
+      )
+    )
+  )
 ))
 
 const negativeSubItems = computed(() => {

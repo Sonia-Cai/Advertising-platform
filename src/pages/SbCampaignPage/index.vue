@@ -14,7 +14,6 @@
           <SbSettingsSection ref="settingsRef" />
           <SbGoalsSection />
           <SbSitesSection />
-          <SbBidAdjustmentSection />
         </main>
       </div>
     </div>
@@ -33,7 +32,6 @@ import BottomBar from '@/components/BottomBar.vue'
 import SbSettingsSection from './SbSettingsSection.vue'
 import SbGoalsSection from './SbGoalsSection.vue'
 import SbSitesSection from './SbSitesSection.vue'
-import SbBidAdjustmentSection from './SbBidAdjustmentSection.vue'
 import { useSbFlowSteps } from '@/composables/useSbFlowSteps'
 
 const router = useRouter()
@@ -64,9 +62,7 @@ const errorSubItems = computed(() =>
 const subItems = [
   { label: 'Settings',       anchorId: 'section-sb-settings' },
   { label: 'Goals',          anchorId: 'section-sb-goals' },
-  { label: 'Sites',          anchorId: 'section-sb-sites' },
-  { label: 'Placements',     anchorId: 'section-sb-placements' },
-  { label: 'Bid adjustment', anchorId: 'section-sb-bid-adjustment' }
+  { label: 'Sites',          anchorId: 'section-sb-sites' }
 ]
 
 const activeSubItem = ref('Settings')

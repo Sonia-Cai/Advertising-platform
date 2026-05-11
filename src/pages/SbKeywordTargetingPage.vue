@@ -1,7 +1,7 @@
 <template>
   <div class="page-layout">
     <div class="page-center">
-      <Stepper :steps="steps" :current-step="getStepNumber('/sb/keyword-targeting')" />
+      <Stepper :steps="keywordTargetingSteps" :current-step="currentStep" />
 
       <div class="content-wrapper">
         <h2 class="page-title">Keyword Targeting</h2>
@@ -16,6 +16,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Stepper from '@/components/Stepper.vue'
 import BottomBar from '@/components/BottomBar.vue'
@@ -23,11 +24,37 @@ import { useSbFlowSteps } from '@/composables/useSbFlowSteps'
 import SbKeywordTargetingSection from './SbAdPage/shared/SbKeywordTargetingSection.vue'
 
 const router = useRouter()
-const { steps, getStepNumber, getNextPath, getBackPath } = useSbFlowSteps()
+const { steps } = useSbFlowSteps()
+
+const keywordTargetingSteps = computed(() => {
+  if (steps.value.some((step) => step.path === '/sb/keyword-targeting')) {
+    return steps.value
+  }
+
+  const rawSteps = steps.value.map(({ step, ...rest }) => rest)
+  const adIndex = rawSteps.findIndex((step) => step.path === '/sb/ad')
+  const insertIndex = adIndex >= 0 ? adIndex + 1 : rawSteps.length - 2
+
+  rawSteps.splice(insertIndex, 0, {
+    label: 'Keyword Targeting',
+    path: '/sb/keyword-targeting'
+  })
+
+  return rawSteps.map((step, index) => ({ ...step, step: index + 1 }))
+})
+
+const currentStep = computed(() => (
+  keywordTargetingSteps.value.find((step) => step.path === '/sb/keyword-targeting')?.step ?? 1
+))
+
+function getSiblingPath(offset) {
+  const currentIndex = keywordTargetingSteps.value.findIndex((step) => step.path === '/sb/keyword-targeting')
+  return keywordTargetingSteps.value[currentIndex + offset]?.path ?? '/sb/keyword-targeting'
+}
 
 function onCancel() { router.push('/') }
-function onBack() { router.push(getBackPath('/sb/keyword-targeting')) }
-function onNext() { router.push(getNextPath('/sb/keyword-targeting')) }
+function onBack() { router.push(getSiblingPath(-1)) }
+function onNext() { router.push(getSiblingPath(1)) }
 </script>
 
 <style scoped>

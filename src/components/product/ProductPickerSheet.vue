@@ -22,7 +22,7 @@
                 v-model="searchQuery"
                 class="picker-search"
                 type="text"
-                placeholder="Search by product name or ASIN"
+                :placeholder="props.searchPlaceholder"
                 autocomplete="off"
               />
               <button type="button" class="picker-search-btn">Search</button>
@@ -57,26 +57,30 @@
                 <div class="picker-info">
                   <p class="picker-item-title">{{ p.title }}</p>
                   <div class="picker-meta">
-                    <span class="picker-stars">
-                      <svg
-                        v-for="i in 5"
-                        :key="i"
-                        :width="11"
-                        :height="11"
-                        viewBox="0 0 12 12"
-                        :fill="i <= roundRating(p.rating) ? '#f5a623' : '#e0e0e0'"
-                      >
-                        <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9-2.1-2 2.9-.4z" />
-                      </svg>
-                    </span>
-                    <span class="picker-reviews">({{ p.reviews.toLocaleString() }})</span>
+                    <template v-if="props.showProductMeta">
+                      <span class="picker-stars">
+                        <svg
+                          v-for="i in 5"
+                          :key="i"
+                          :width="11"
+                          :height="11"
+                          viewBox="0 0 12 12"
+                          :fill="i <= roundRating(p.rating) ? '#f5a623' : '#e0e0e0'"
+                        >
+                          <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9-2.1-2 2.9-.4z" />
+                        </svg>
+                      </span>
+                      <span class="picker-reviews">({{ p.reviews.toLocaleString() }})</span>
+                      <span class="picker-sep">|</span>
+                    </template>
+                    <template v-if="props.showProductPricing">
+                      <span class="picker-orig-price">{{ p.originalPrice }}</span>
+                      <span class="picker-price">{{ p.price }}</span>
+                      <span class="picker-sep">|</span>
+                    </template>
+                    <span class="picker-stock">{{ props.stockLabel || (p.inStock ? 'In stock' : 'Out of stock') }}</span>
                     <span class="picker-sep">|</span>
-                    <span class="picker-orig-price">{{ p.originalPrice }}</span>
-                    <span class="picker-price">{{ p.price }}</span>
-                    <span class="picker-sep">|</span>
-                    <span class="picker-stock">{{ p.inStock ? 'In stock' : 'Out of stock' }}</span>
-                    <span class="picker-sep">|</span>
-                    <span class="picker-asin">ASIN：{{ p.asin }}</span>
+                    <span class="picker-asin">{{ props.asinLabelPrefix }}{{ props.asinLabel || p.asin }}</span>
                   </div>
                 </div>
               </div>
@@ -124,7 +128,13 @@ const props = defineProps({
   initialSelectedIds: { type: Array, default: () => [] },
   /** 上限：1 表示单选；>1 表示多选并按上限拦截；null 表示不限 */
   maxSelection: { type: Number, default: null },
-  title: { type: String, default: 'Select the products you want to advertise for this ad group' }
+  title: { type: String, default: 'Select the products you want to advertise for this ad group' },
+  searchPlaceholder: { type: String, default: 'Search by product name or ASIN' },
+  showProductMeta: { type: Boolean, default: true },
+  showProductPricing: { type: Boolean, default: true },
+  stockLabel: { type: String, default: '' },
+  asinLabel: { type: String, default: '' },
+  asinLabelPrefix: { type: String, default: 'ASIN：' }
 })
 
 /** 单选模式：max=1 时点击切换的同时会清空其它选项，并以 radio 视觉呈现 */
@@ -403,7 +413,8 @@ function onConfirm() {
   gap: 12px;
   box-sizing: border-box;
   padding: 16px;
-  margin: 0 14px;
+  margin: 0 24px;
+  width: calc(100% - 48px);
   align-self: stretch;
   text-align: left;
   border: 1px solid transparent;

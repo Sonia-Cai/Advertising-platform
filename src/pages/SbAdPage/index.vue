@@ -99,19 +99,22 @@ const storeSpotlightAdNavSubItems = computed(() => {
     { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
     { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
   ]
-  if (
-    form.value.goals === 'drive_page_visits'
-    || form.value.goals === 'brand_impression_share'
-  ) {
+  if (form.value.goals === 'drive_page_visits') {
     base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
   }
   const hasSeparateKeywordTargetingStep = (
-    form.value.goals === 'drive_page_visits'
-    && form.value.storeSpotlightManualTargetType === 'keyword'
+    (
+      form.value.goals === 'drive_page_visits'
+      && form.value.storeSpotlightManualTargetType === 'keyword'
+    )
+    || form.value.goals === 'brand_impression_share'
   )
   const hasSeparateProductTargetingStep = (
-    form.value.goals === 'drive_page_visits'
-    && form.value.storeSpotlightManualTargetType === 'product'
+    (
+      form.value.goals === 'drive_page_visits'
+      && form.value.storeSpotlightManualTargetType === 'product'
+    )
+    || form.value.goals === 'brand_impression_share'
   )
   if (form.value.storeSpotlightManualTargetType === 'keyword' && !hasSeparateKeywordTargetingStep) {
     base.push({ label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' })
@@ -125,20 +128,31 @@ const storeSpotlightAdNavSubItems = computed(() => {
 
 const videoSubItems = computed(() => {
   if (form.value.videoLandingType === 'store') {
-    return [
+    const base = [
       { label: 'Ad name', anchorId: 'section-sb-ss-ad-name' },
       { label: 'Headline', anchorId: 'section-sb-ss-headline' },
-      { label: 'Brand store pages', anchorId: 'section-sb-ss-store-pages' },
-      { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' },
-      { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
       { label: 'Video', anchorId: 'section-sb-video' },
-      { label: 'Products', anchorId: 'section-sb-products' }
+      { label: 'Products', anchorId: 'section-sb-products' },
+      { label: 'Brand assets', anchorId: 'section-sb-ss-brand-assets' }
+    ]
+    if (form.value.goals !== 'brand_impression_share') {
+      base.push({ label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' })
+    }
+    return base
+  }
+  if (form.value.goals === 'drive_page_visits') {
+    return [
+      { label: 'Ad name', anchorId: 'section-sb-ss-ad-name' },
+      { label: 'Product', anchorId: 'section-sb-products' },
+      { label: 'Video', anchorId: 'section-sb-video' },
+      { label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' }
     ]
   }
   return [
     { label: 'Ad name', anchorId: 'section-sb-video-ad-name' },
     { label: 'Keyword targeting', anchorId: 'section-sb-keyword-targeting' },
-    { label: 'Products', anchorId: 'section-sb-products' }
+    { label: 'Product', anchorId: 'section-sb-products' },
+    { label: 'Manual targeting', anchorId: 'section-sb-store-spotlight-manual-targeting' }
   ]
 })
 

@@ -338,16 +338,33 @@ import iconHelpCircle from '@/assets/icon-help-circle.svg'
 
 const { form } = storeToRefs(useSbStore())
 
-const isStoreSpotlightSeparateKeywordTargeting = computed(() => (
-  form.value.goals === 'drive_page_visits'
-  && form.value.adFormat === 'store_spotlight'
-  && form.value.storeSpotlightManualTargetType === 'keyword'
-))
-const usesCollectionsKeywordTargetingLayout = computed(() => (
+const usesSuggestedKeywordTargetingLayout = computed(() => (
   form.value.adFormat === 'collections'
-  || isStoreSpotlightSeparateKeywordTargeting.value
+  || (
+    form.value.adFormat === 'store_spotlight'
+    && (
+      (
+        form.value.goals === 'drive_page_visits'
+        && form.value.storeSpotlightManualTargetType === 'keyword'
+      )
+      || form.value.goals === 'brand_impression_share'
+    )
+  )
+  || (
+    form.value.adFormat === 'video'
+    && (
+      form.value.goals === 'brand_impression_share'
+      || (
+        (
+          form.value.videoLandingType === 'product_detail'
+          || form.value.videoLandingType === 'store'
+        )
+        && form.value.storeSpotlightManualTargetType === 'keyword'
+      )
+    )
+  )
 ))
-const showUploadTab = computed(() => usesCollectionsKeywordTargetingLayout.value)
+const showUploadTab = computed(() => usesSuggestedKeywordTargetingLayout.value)
 
 const tabs = computed(() => {
   if (form.value.adFormat === 'collections' && form.value.targetingAuto) {
@@ -359,7 +376,29 @@ const tabs = computed(() => {
 
   if (
     (form.value.adFormat === 'collections' && !form.value.targetingAuto)
-    || isStoreSpotlightSeparateKeywordTargeting.value
+    || (
+      form.value.adFormat === 'store_spotlight'
+      && (
+        (
+          form.value.goals === 'drive_page_visits'
+          && form.value.storeSpotlightManualTargetType === 'keyword'
+        )
+        || form.value.goals === 'brand_impression_share'
+      )
+    )
+    || (
+      form.value.adFormat === 'video'
+      && (
+        form.value.goals === 'brand_impression_share'
+        || (
+          (
+            form.value.videoLandingType === 'product_detail'
+            || form.value.videoLandingType === 'store'
+          )
+          && form.value.storeSpotlightManualTargetType === 'keyword'
+        )
+      )
+    )
   ) {
     return [
       { id: 'amazon', label: 'Suggested' },
